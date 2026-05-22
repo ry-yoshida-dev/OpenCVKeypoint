@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from .type_alias import KPDetector
@@ -186,10 +186,12 @@ class KPDetectionMethod(Enum):
                 return SimpleBlobDetector
             case KPDetectionMethod.SHI_TOMASHI:
                 from .detectors import ShiTomashiDetector
-                return ShiTomashiDetector
+
+                return cast(type[KPDetector], ShiTomashiDetector)
             case KPDetectionMethod.HARRIS:
                 from .detectors import HarrisDetector
-                return HarrisDetector
+
+                return cast(type[KPDetector], HarrisDetector)
 
     @property
     def parameter_class(

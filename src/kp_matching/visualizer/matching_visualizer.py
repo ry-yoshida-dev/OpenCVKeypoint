@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import cv2
@@ -23,9 +24,9 @@ class MatchingVisualizer:
     def draw_matches(
         self,
         img1: np.ndarray, 
-        kps1: tuple[cv2.KeyPoint, ...] | np.ndarray, 
-        img2: np.ndarray, 
-        kps2: tuple[cv2.KeyPoint, ...] | np.ndarray, 
+        kps1: tuple[cv2.KeyPoint, ...] | Sequence[cv2.KeyPoint] | np.ndarray,
+        img2: np.ndarray,
+        kps2: tuple[cv2.KeyPoint, ...] | Sequence[cv2.KeyPoint] | np.ndarray, 
         matches: list[cv2.DMatch] | list[KNNMatchGroup]
         ) -> np.ndarray:
         """
@@ -37,12 +38,12 @@ class MatchingVisualizer:
         ----------
         img1: np.ndarray
             First image.
-        kps1: list[cv2.KeyPoint]
-            List of keypoints in the first image.
+        kps1: tuple[cv2.KeyPoint, ...] | Sequence[cv2.KeyPoint] | np.ndarray
+            Keypoints in the first image.
         img2: np.ndarray
             Second image.
-        kps2: list[cv2.KeyPoint]
-            List of keypoints in the second image.
+        kps2: tuple[cv2.KeyPoint, ...] | Sequence[cv2.KeyPoint] | np.ndarray
+            Keypoints in the second image.
             matches (list[cv2.DMatch]): List of matches between keypoints.
 
         Returns:
