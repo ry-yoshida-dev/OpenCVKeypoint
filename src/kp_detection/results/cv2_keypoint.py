@@ -89,7 +89,7 @@ class KPDetectionResult(
         Returns:
         ----------
         np.ndarray:
-            1-D array of length N (dtype inferred by NumPy).
+            1-D array with shape ``(N,)`` (dtype inferred by NumPy).
         """
         return np.array([kp.pt[0] for kp in self.keypoints])
 
@@ -101,7 +101,7 @@ class KPDetectionResult(
         Returns:
         ----------
         np.ndarray:
-            1-D array of length N (dtype inferred by NumPy).
+            1-D array with shape ``(N,)`` (dtype inferred by NumPy).
         """
         return np.array([kp.pt[1] for kp in self.keypoints])
 
@@ -113,7 +113,7 @@ class KPDetectionResult(
         Returns:
         ----------
         np.ndarray:
-            Shape (N, 2).
+            Shape ``(N, 2)``.
         """
         return np.array([kp.pt for kp in self.keypoints])
 
@@ -125,7 +125,7 @@ class KPDetectionResult(
         Returns:
         ----------
         np.ndarray:
-            1-D array of length N.
+            1-D array with shape ``(N,)``.
         """
         return np.array([kp.angle for kp in self.keypoints])
 
@@ -137,9 +137,38 @@ class KPDetectionResult(
         Returns:
         ----------
         np.ndarray:
-            1-D array of length N.
+            1-D array with shape ``(N,)``.
         """
         return np.array([kp.size for kp in self.keypoints])
+
+    def scale_coordinates(self, factor: float) -> None:
+        """
+        Scale cv2.KeyPoint positions and sizes in place.
+
+        Parameters:
+        ----------
+        factor: float
+            Multiplier for ``pt`` and ``size`` of each keypoint.
+
+        Raises:
+        ----------
+        ValueError:
+            If factor is not positive.
+        """
+        if factor <= 0.0:
+            raise ValueError(f"factor must be positive, got {factor}")
+        self.keypoints = [
+            cv2.KeyPoint(
+                x=kp.pt[0] * factor,
+                y=kp.pt[1] * factor,
+                size=kp.size * factor,
+                angle=kp.angle,
+                response=kp.response,
+                octave=kp.octave,
+                class_id=kp.class_id,
+            )
+            for kp in self.keypoints
+        ]
 
     def apply_mask(self, mask: np.ndarray) -> None:
         """

@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Generic, TypeVar
+from typing import Any, Callable, Generic, TypeVar
 
 from .parameter import KPDetectionParameters
 from .method import KPDetectionMethod
@@ -10,7 +10,7 @@ from .results import KeyPointDetectionResult as DetectionResultUnion
 
 DetectorT = TypeVar("DetectorT", bound=cv2.Feature2D | None)
 ExtractorT = TypeVar("ExtractorT", bound=cv2.Feature2D | None)
-ResultT = TypeVar("ResultT", bound=DetectionResultUnion, covariant=True)
+ResultT = TypeVar("ResultT", bound=DetectionResultUnion)
 ParamsT = TypeVar("ParamsT", bound=KPDetectionParameters)
 
 @dataclass(repr=False, eq=False)
@@ -53,7 +53,7 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         Parameters:
         ----------
         img: np.ndarray
-            Input image, typically (H, W) or (H, W, C) as required by the detector.
+            Input image, typically ``(H, W)`` or ``(H, W, C)`` as required by the detector.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
             
@@ -105,3 +105,44 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         bool: The whether the detector uses brief descriptor extractor.
         """
         return self.params.is_brief_applied
+
+    @property
+    def image_scaler(self) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Get the image scaler function.
+
+        Returns:
+        ----------
+        Callable[[np.ndarray], np.ndarray]: The image scaler function.
+        """
+        return self.params.image_scaler
+
+    @property
+    def scale_factor(self) -> float:
+        """
+        Get the scale factor.
+
+        Returns:
+        ----------
+        float: The scale factor.
+        """
+        return self.params.scale_factor
+
+    def _remap_result_to_original_coordinates(self, result: ResultT) -> ResultT:
+        """
+        Map detection coordinates from the working (scaled) image to the input image.
+
+        Parameters
+        ----------
+        result : ResultT
+            Detection result produced on ``image_scaler(img)``.
+
+        Returns
+        -------
+        ResultT
+            Same instance, with coordinates scaled by ``1.0 / scale_factor`` when needed.
+        """
+        scale_factor = self.scale_factor
+        if scale_factor != 1.0:
+            result.scale_coordinates(1.0 / scale_factor)
+        return result

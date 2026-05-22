@@ -40,7 +40,7 @@ class MSERDetector(KeyPointDetector[cv2.Feature2D, cv2.Feature2D, KPDetectionRes
         Parameters:
         ----------
         img: np.ndarray
-            Input image (H, W) or (H, W, C) as accepted by OpenCV MSER.
+            Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV MSER.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -49,19 +49,20 @@ class MSERDetector(KeyPointDetector[cv2.Feature2D, cv2.Feature2D, KPDetectionRes
         KPDetectionResult
             The result of keypoint detection.
         """
-        regions: list[np.ndarray] # ndarray with shape (N, 2)
-        regions, _ = self.detector.detectRegions(img) # type: ignore
+        regions: list[np.ndarray]  # each region has shape ``(N, 2)``
+        regions, _ = self.detector.detectRegions(self.image_scaler(img)) # type: ignore
 
         keypoints = [
             cv2.KeyPoint(x=float(pt[0]), y=float(pt[1]), size=3.0) # type: ignore
             for region in regions # type: ignore
             for pt in region # type: ignore
         ]
-        return KPDetectionResult(
+        result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=np.array([]),
         )
+        return self._remap_result_to_original_coordinates(result)
 
     def __str__(self) -> str:
         return f"MSERDetector(method={self.params.method})"

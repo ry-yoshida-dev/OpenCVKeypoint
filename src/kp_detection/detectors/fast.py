@@ -38,7 +38,7 @@ class FASTDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult, KPDe
         Parameters:
         ----------
         img: np.ndarray
-            Input image (H, W) or (H, W, C) as accepted by OpenCV FAST.
+            Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV FAST.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -47,13 +47,14 @@ class FASTDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult, KPDe
         KPDetectionResult
             The result of keypoint detection.
         """
-        keypoints = self.detector.detect(img, None)
-   
+        keypoints = self.detector.detect(self.image_scaler(img), None)
+
         result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=None,
-            )
+        )
+        result = self._remap_result_to_original_coordinates(result)
         if mask is not None:
             result.apply_mask(mask)
         return result

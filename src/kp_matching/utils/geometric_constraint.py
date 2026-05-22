@@ -80,7 +80,7 @@ class GeometricConstraint(Enum):
         Returns:
         ----------
         np.ndarray | None:
-            Inlier/outlier mask -> shape: (n, 1) 0: outlier, 1: inlier.
+            Inlier/outlier mask with shape ``(n, 1)`` (0: outlier, 1: inlier).
         """
         match self:
             case GeometricConstraint.FUNDAMENTAL:

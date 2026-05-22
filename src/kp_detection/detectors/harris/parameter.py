@@ -68,8 +68,8 @@ class HarrisParameters(KPDetectionParameters):
         Returns:
         ----------
         Callable[[np.ndarray], np.ndarray]
-            Function mapping a single-channel (H, W) image to a float32 corner
-            response map of the same shape (output of cv2.cornerHarris).
+            Function mapping a single-channel ``(H, W)`` image to a float32
+            corner response map of the same shape (output of ``cv2.cornerHarris``).
         """
         return lambda img: cv2.cornerHarris(
             img,

@@ -50,7 +50,7 @@ class ShiTomashiDetector(KeyPointDetector[None, None, ArrayKPDetectionResult, Sh
         Parameters:
         ----------
         img: np.ndarray
-            Grayscale (H, W) or color (H, W, C).
+            Grayscale ``(H, W)`` or color ``(H, W, C)``.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -64,17 +64,21 @@ class ShiTomashiDetector(KeyPointDetector[None, None, ArrayKPDetectionResult, Sh
 
         keypoints: np.ndarray
         if img.ndim == 2:
-            keypoints = self.function(img, mask)
+            keypoints = self.function(self.image_scaler(img), mask)
         elif img.ndim == 3:
             warnings.warn("3D array is input as image, converting to grayscale")
-            keypoints = self.function(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), mask)
+            keypoints = self.function(
+                self.image_scaler(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)),
+                mask,
+            )
         else:
             raise ValueError(f"img must be a 2D or 3D array, got shape {img.shape}")
-        return ArrayKPDetectionResult(
+        result = ArrayKPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=None,
         )
+        return self._remap_result_to_original_coordinates(result)
 
     def __str__(self) -> str:
         return f"ShiTomashiDetector(params={self.params!r})"

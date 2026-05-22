@@ -110,7 +110,7 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
     @abstractmethod
     def x(self) -> np.ndarray:
         """
-        X coordinates for each keypoint (1-D array, length N).
+        X coordinates for each keypoint (1-D array with shape ``(N,)``).
 
         Returns:
         ----------
@@ -122,7 +122,7 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
     @abstractmethod
     def y(self) -> np.ndarray:
         """
-        Y coordinates for each keypoint (1-D array, length N).
+        Y coordinates for each keypoint (1-D array with shape ``(N,)``).
 
         Returns:
         ----------
@@ -139,7 +139,7 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         Returns:
         ----------
         np.ndarray:
-            Shape (N, 2) (or subclass-equivalent layout).
+            Shape ``(N, 2)`` (or subclass-equivalent layout).
         """
 
     @property
@@ -151,7 +151,7 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         Returns:
         ----------
         np.ndarray:
-            1-D array of length N.
+            1-D array with shape ``(N,)``.
         """
 
     @property
@@ -163,5 +163,23 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         Returns:
         ----------
         np.ndarray:
-            1-D array of length N.
+            1-D array with shape ``(N,)``.
+        """
+
+    @abstractmethod
+    def scale_coordinates(self, factor: float) -> None:
+        """
+        Scale keypoint positions (and feature sizes where applicable) in place.
+
+        Parameters:
+        ----------
+        factor: float
+            Multiplier applied to each (x, y) and to feature size when present.
+            Use ``1.0 / detection_scale_factor`` to map coordinates from a
+            downscaled working image back to the original image space.
+
+        Raises:
+        ----------
+        ValueError:
+            If factor is not positive.
         """

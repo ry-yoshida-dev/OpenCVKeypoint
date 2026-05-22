@@ -41,7 +41,7 @@ class AGASTDetector(KeyPointDetector[cv2.AgastFeatureDetector, cv2.Feature2D, KP
         Parameters:
         ----------
         img: np.ndarray
-            Input image (H, W) or (H, W, C) as accepted by OpenCV.
+            Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -50,14 +50,16 @@ class AGASTDetector(KeyPointDetector[cv2.AgastFeatureDetector, cv2.Feature2D, KP
         KPDetectionResult
             The result of keypoint detection. 
         """
-        keypoints = self.detector.detect(img, None)
+        scaled = self.image_scaler(img)
+        keypoints = self.detector.detect(scaled, None)
         keypoints, descriptors = self.extractor.compute(img, keypoints)
 
-        return KPDetectionResult(
+        result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=descriptors,
         )
+        return self._remap_result_to_original_coordinates(result)
 
     def __str__(self) -> str:
         return f"AGASTDetector(method={self.params.method})"

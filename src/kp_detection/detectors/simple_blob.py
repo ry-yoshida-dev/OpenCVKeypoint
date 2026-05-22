@@ -37,7 +37,7 @@ class SimpleBlobDetector(KeyPointDetector[cv2.SimpleBlobDetector, None, KPDetect
         Parameters:
         ----------
         img: np.ndarray
-            Input image (H, W) or (H, W, C) as accepted by OpenCV.
+            Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -46,13 +46,14 @@ class SimpleBlobDetector(KeyPointDetector[cv2.SimpleBlobDetector, None, KPDetect
         KPDetectionResult
             The result of keypoint detection.
         """
-        keypoints = self.detector.detect(img, None)
+        keypoints = self.detector.detect(self.image_scaler(img), None)
 
-        return KPDetectionResult(
+        result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=np.array([]),
         )
+        return self._remap_result_to_original_coordinates(result)
 
     def __str__(self) -> str:
         return f"SimpleBlobDetector(method={self.params.method})"

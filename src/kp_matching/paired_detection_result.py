@@ -38,7 +38,7 @@ class PairedDetectionResult:
         Returns:
         -------
         np.ndarray:
-            The query matched coordinates -> shape: (n, 2).
+            The query matched coordinates with shape ``(n, 2)``.
         """
         query_keypoints = self.query_det_result.coordinates
         match_indices = [match.queryIdx for match in self.match_result]
@@ -52,7 +52,7 @@ class PairedDetectionResult:
         Returns:
         -------
         np.ndarray:
-            The gallery matched coordinates -> shape: (n, 2).
+            The gallery matched coordinates with shape ``(n, 2)``.
         """
         gallery_keypoints = self.gallery_det_result.coordinates
         match_indices = [match.trainIdx for match in self.match_result]

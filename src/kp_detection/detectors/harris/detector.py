@@ -51,7 +51,7 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
         Parameters:
         ----------
         img: np.ndarray
-            Grayscale image shaped (H, W).
+            Grayscale image with shape ``(H, W)``.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -64,12 +64,14 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
             raise ValueError(f"mask must be a 2D array, got shape {mask.shape}")
 
         if img.ndim == 2:
-            corner_response = self.harris_function(img)
+            working = self.image_scaler(img)
         elif img.ndim == 3:
             warnings.warn("3D array is input as image, converting to grayscale")
-            corner_response = self.harris_function(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
+            working = self.image_scaler(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY))
         else:
             raise ValueError(f"img must be a 2D or 3D array, got shape {img.shape}")
+
+        corner_response = self.harris_function(working)
 
         if mask is not None:
             corner_response *= mask
@@ -81,11 +83,12 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
             cv2.KeyPoint(x=float(pt[1]), y=float(pt[0]), size=3.0)
             for pt in keypoints
         ]
-        return KPDetectionResult(
+        result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=None,
         )
+        return self._remap_result_to_original_coordinates(result)
 
     def __str__(self) -> str:
         return f"HarrisDetector(params={self.params!r})"

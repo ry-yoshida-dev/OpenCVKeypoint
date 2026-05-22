@@ -38,3 +38,7 @@ Descriptor column reflects `KPDetectionMethod.has_descriptor` and binary/float s
 | SIFT | Feature | Float | Scale-invariant feature transform |
 
 Optional **BRIEF** post-descriptor (`KPDetectionParameters.is_brief_applied`) is only valid when `KPDetectionMethod.is_brief_supported()` is true (ORB, BRISK, AKAZE).
+
+`KPDetectionParameters` also exposes `scale_factor` (default `1.0`), `interpolation` (`OpenCVInterpolationFlag.LINEAR`), and `image_scaler` (built once in `__post_init__`: identity when `scale_factor == 1.0`, otherwise `cv2.resize` with `fx`/`fy`).
+
+Detection results (`KPDetectionResult`, `ArrayKPDetectionResult`) implement `scale_coordinates(factor)` to multiply coordinates in place (and `cv2.KeyPoint.size` where applicable). After detection on a rescaled image, call `scale_coordinates(1.0 / params.scale_factor)` to map back to the original image space.

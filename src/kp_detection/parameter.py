@@ -1,8 +1,14 @@
 from __future__ import annotations
+
 import warnings
-import cv2
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+import cv2
+import numpy as np
+from opencv_utility import OpenCVInterpolationFlag
+
 from .method import KPDetectionMethod
 
 if TYPE_CHECKING:
@@ -19,16 +25,27 @@ class KPDetectionParameters:
         The method for keypoint detection.
     is_brief_applied: bool
         Whether to use brief descriptor extractor.
+    scale_factor: float
+        Scale factor applied to the input image before detection (1.0 = no scaling).
+    interpolation: OpenCVInterpolationFlag
+        OpenCV interpolation flag used when scaling the input image.
+    image_scaler: Callable[[np.ndarray], np.ndarray]
+        Built once at init: identity when ``scale_factor`` is ``1.0``,
+        otherwise ``cv2.resize`` with ``fx``/``fy`` = ``scale_factor``.
     """
     method: KPDetectionMethod = KPDetectionMethod.SIFT
     is_brief_applied: bool = False
+    scale_factor: float = 1.0
+    interpolation: OpenCVInterpolationFlag = OpenCVInterpolationFlag.LINEAR
     brief: Any = field(init=False, default=None)
+    image_scaler: Callable[[np.ndarray], np.ndarray] = field(init=False)
 
     def __post_init__(self) -> None:
         """
         Post-initialization validation.
         """
         self._validate()
+        self.image_scaler = self._build_image_scaler()
         if self.is_brief_applied:
             self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create() # type: ignore
 
@@ -36,6 +53,8 @@ class KPDetectionParameters:
         """
         Validate the parameters.
         """
+        if self.scale_factor <= 0.0:
+            raise ValueError(f"scale_factor must be positive, got {self.scale_factor}")
         if self.is_brief_applied and not self.method.is_brief_supported():
             brief_methods = "\n".join(
                 f"  - {m.value}" for m in KPDetectionMethod if m.is_brief_supported()
@@ -47,6 +66,27 @@ class KPDetectionParameters:
                 f"{brief_methods}"
             )
             self.is_brief_applied = False
+
+    def _build_image_scaler(self) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Build ``image_scaler`` from current ``scale_factor`` and ``interpolation``.
+
+        Returns
+        -------
+        Callable[[np.ndarray], np.ndarray]
+            Identity when ``scale_factor`` is ``1.0``; otherwise resize via ``cv2.resize``.
+        """
+        if self.scale_factor == 1.0:
+            return lambda img: img
+        interpolation = self.interpolation.cv2_flag
+        scale = self.scale_factor
+        return lambda img: cv2.resize(
+            img,
+            dsize=None,
+            fx=scale,
+            fy=scale,
+            interpolation=interpolation,
+        )
 
     def build_detector(self) -> KPDetector:
         """

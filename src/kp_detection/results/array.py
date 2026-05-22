@@ -12,7 +12,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
     """
     Keypoint detection result backed by a coordinate NumPy ndarray.
 
-    Typical sources include cv2.goodFeaturesToTrack (often (N, 1, 2) float32).
+    Typical sources include cv2.goodFeaturesToTrack (often ``(N, 1, 2)`` float32).
     Orientation and patch size are not represented; angles and sizes are filled
     with -1.0.
 
@@ -21,7 +21,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
     method: KPDetectionMethod
         The detection method that produced this result (from the base class).
     keypoints: np.ndarray
-        Coordinates as (N, 2) or (N, 1, 2).
+        Coordinates as ``(N, 2)`` or ``(N, 1, 2)``.
     descriptors: np.ndarray | None
         Descriptor rows aligned with keypoints, or None if not computed.
     """
@@ -53,7 +53,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         Returns:
         ----------
         KPDetectionStep[np.ndarray]:
-            (xy_row, descriptor_row_or_none); xy row has shape (2,).
+            (xy_row, descriptor_row_or_none); xy row has shape ``(2,)``.
         """
         row = self._as_xy_pairs()[index]
         if self.descriptors is None:
@@ -104,7 +104,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         Returns:
         ----------
         np.ndarray:
-            Column 0 of the normalized (N, 2) coordinates.
+            Column 0 of the normalized ``(N, 2)`` coordinates.
         """
         return self._as_xy_pairs()[:, 0]
 
@@ -116,14 +116,14 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         Returns:
         ----------
         np.ndarray:
-            Column 1 of the normalized (N, 2) coordinates.
+            Column 1 of the normalized ``(N, 2)`` coordinates.
         """
         return self._as_xy_pairs()[:, 1]
 
     @property
     def coordinates(self) -> np.ndarray:
         """
-        All keypoints as (N, 2) float64 with x and y columns.
+        All keypoints as ``(N, 2)`` float64 with x and y columns.
 
         Returns:
         ----------
@@ -140,7 +140,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         Returns:
         ----------
         np.ndarray:
-            Shape (N,), dtype float64.
+            Shape ``(N,)``, dtype float64.
         """
         n = len(self)
         return np.full(n, -1.0, dtype=np.float64)
@@ -153,24 +153,52 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         Returns:
         ----------
         np.ndarray:
-            Shape (N,), dtype float64.
+            Shape ``(N,)``, dtype float64.
         """
         n = len(self)
         return np.full(n, -1.0, dtype=np.float64)
 
-    def _as_xy_pairs(self) -> np.ndarray:
+    def scale_coordinates(self, factor: float) -> None:
         """
-        Normalize self.keypoints to a float (N, 2) array.
+        Scale stored coordinate rows in place.
 
-        Returns:
+        Parameters:
         ----------
-        np.ndarray
-            Float64 array of shape (N, 2) with x and y columns.
+        factor: float
+            Multiplier for each (x, y) pair. Array layout ``(N, 2)`` or
+            ``(N, 1, 2)`` is preserved.
 
         Raises:
         ----------
         ValueError:
-            If keypoints is not (N, 2) or (N, 1, 2).
+            If factor is not positive.
+        """
+        if factor <= 0.0:
+            raise ValueError(f"factor must be positive, got {factor}")
+        if self.keypoints.size == 0:
+            return
+        original = self.keypoints
+        scaled_xy = self._as_xy_pairs() * factor
+        if original.ndim == 3 and original.shape[1] == 1:
+            self.keypoints = scaled_xy.reshape(-1, 1, 2).astype(
+                original.dtype, copy=False
+            )
+        else:
+            self.keypoints = scaled_xy.astype(original.dtype, copy=False)
+
+    def _as_xy_pairs(self) -> np.ndarray:
+        """
+        Normalize self.keypoints to a float ``(N, 2)`` array.
+
+        Returns:
+        ----------
+        np.ndarray
+            Float64 array with shape ``(N, 2)`` and x/y columns.
+
+        Raises:
+        ----------
+        ValueError:
+            If keypoints is not ``(N, 2)`` or ``(N, 1, 2)``.
         """
         keypoints = self.keypoints
         if keypoints.size == 0:

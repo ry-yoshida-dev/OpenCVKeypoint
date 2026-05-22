@@ -27,7 +27,7 @@ class StandardKPDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult
         Parameters:
         ----------
         img: np.ndarray
-            Input image (H, W) or (H, W, C) as accepted by OpenCV Feature2D.
+            Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV Feature2D.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
 
@@ -37,17 +37,18 @@ class StandardKPDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult
             OpenCV keypoints plus optional descriptor rows.
         """
         keypoints, descriptors = self.detector.detectAndCompute(
-            image=img,
+            image=self.image_scaler(img),
             mask=mask,
         )
         if self.params.is_brief_applied:
             keypoints, descriptors = self.brief.compute(img, keypoints)
 
-        return KPDetectionResult(
+        result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=descriptors,
         )
+        return self._remap_result_to_original_coordinates(result)
 
     def __str__(self) -> str:
         return f"StandardKPDetector(method={self.params.method})"
