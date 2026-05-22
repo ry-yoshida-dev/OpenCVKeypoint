@@ -9,8 +9,8 @@ from typing import Generic, Iterator, TypeVar
 
 from .method import KPDetectionMethod
 
-KPT = TypeVar("KPT")
-KPElem = TypeVar("KPElem")
+KPT = TypeVar("KPT", covariant=True)
+KPElem = TypeVar("KPElem", covariant=True)
 
 type KPDetectionStep[T] = tuple[T, np.ndarray | None]
 

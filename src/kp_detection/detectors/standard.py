@@ -36,19 +36,22 @@ class StandardKPDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult
         KPDetectionResult
             OpenCV keypoints plus optional descriptor rows.
         """
+        scaled_image = self.image_scaler(img)
+        scaled_mask = self._scaled_detection_mask(mask)
         keypoints, descriptors = self.detector.detectAndCompute(
-            image=self.image_scaler(img),
-            mask=mask,
+            image=scaled_image,
+            mask=scaled_mask,
         )
         if self.params.is_brief_applied:
-            keypoints, descriptors = self.brief.compute(img, keypoints)
+            keypoints, descriptors = self.brief.compute(scaled_image, keypoints)
 
         result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=descriptors,
         )
-        return self._remap_result_to_original_coordinates(result)
+        self._remap_result_to_original_coordinates(result)
+        return result
 
     def __str__(self) -> str:
         return f"StandardKPDetector(method={self.params.method})"

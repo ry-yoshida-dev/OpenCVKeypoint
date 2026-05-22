@@ -1,12 +1,19 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .type_alias import KPDetector
     from .parameter import KPDetectionParameters
-    from .detectors import ShiTomashiParameters, HarrisParameters
+    from .detectors.harris.parameter import HarrisParameters
+    from .detectors.shi_tomashi.parameter import ShiTomashiParameters
+
+    type DetectionParameterClass = (
+        type[KPDetectionParameters]
+        | type[ShiTomashiParameters]
+        | type[HarrisParameters]
+    )
 
 class KPDetectionMethod(Enum):
     """
@@ -140,13 +147,13 @@ class KPDetectionMethod(Enum):
             ]
 
     @property
-    def detector_class(self) -> Type[KPDetector]:
+    def detector_class(self) -> type[KPDetector]:
         """
         Get the detector class for the method.
 
         Returns:
         ----------
-        Type[BuiltFromParametersKPDetector]:
+        type[KPDetector]:
             The detector class for the method.
         """
         match self:
@@ -185,23 +192,31 @@ class KPDetectionMethod(Enum):
                 return HarrisDetector
 
     @property
-    def parameter_class(self) -> Type[KPDetectionParameters | ShiTomashiParameters | HarrisParameters]:
+    def parameter_class(
+        self,
+    ) -> (
+        type[KPDetectionParameters]
+        | type[ShiTomashiParameters]
+        | type[HarrisParameters]
+    ):
         """
         Get the parameter class for the method.
 
         Returns:
         ----------
-        Type[KPDetectionParameters]:
+        type[KPDetectionParameters] | type[ShiTomashiParameters] | type[HarrisParameters]:
             The parameter class for the method.
         """
         match self:
             case KPDetectionMethod.SHI_TOMASHI:
-                from .detectors import ShiTomashiParameters
-                parameter_class = ShiTomashiParameters
+                from .detectors.shi_tomashi.parameter import ShiTomashiParameters
+
+                return ShiTomashiParameters
             case KPDetectionMethod.HARRIS:
-                from .detectors import HarrisParameters
-                parameter_class = HarrisParameters
+                from .detectors.harris.parameter import HarrisParameters
+
+                return HarrisParameters
             case _:
                 from .parameter import KPDetectionParameters
-                parameter_class = KPDetectionParameters
-        return parameter_class
+
+                return KPDetectionParameters

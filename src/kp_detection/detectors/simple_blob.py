@@ -46,14 +46,17 @@ class SimpleBlobDetector(KeyPointDetector[cv2.SimpleBlobDetector, None, KPDetect
         KPDetectionResult
             The result of keypoint detection.
         """
-        keypoints = self.detector.detect(self.image_scaler(img), None)
+        self._warn_if_mask_unused(mask)
+        scaled_image = self.image_scaler(img)
+        keypoints = self.detector.detect(scaled_image, None)
 
         result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=np.array([]),
         )
-        return self._remap_result_to_original_coordinates(result)
+        self._remap_result_to_original_coordinates(result)
+        return result
 
     def __str__(self) -> str:
         return f"SimpleBlobDetector(method={self.params.method})"

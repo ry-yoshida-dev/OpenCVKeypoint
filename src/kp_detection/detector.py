@@ -1,3 +1,5 @@
+import warnings
+
 import cv2
 import numpy as np
 from abc import ABC, abstractmethod
@@ -6,11 +8,15 @@ from typing import Any, Callable, Generic, TypeVar
 
 from .parameter import KPDetectionParameters
 from .method import KPDetectionMethod
-from .results import KeyPointDetectionResult as DetectionResultUnion
+from .result import KeyPointDetectionResult as DetectionResultBase
 
 DetectorT = TypeVar("DetectorT", bound=cv2.Feature2D | None)
 ExtractorT = TypeVar("ExtractorT", bound=cv2.Feature2D | None)
-ResultT = TypeVar("ResultT", bound=DetectionResultUnion)
+ResultT = TypeVar(
+    "ResultT",
+    bound=DetectionResultBase[Any, Any],
+    covariant=True,
+)
 ParamsT = TypeVar("ParamsT", bound=KPDetectionParameters)
 
 @dataclass(repr=False, eq=False)
@@ -118,6 +124,18 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         return self.params.image_scaler
 
     @property
+    def mask_rescaler(self) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Get the mask rescaler function.
+
+        Returns
+        -------
+        Callable[[np.ndarray], np.ndarray]
+            Resizes a 2D mask to match ``image_scaler`` output dimensions.
+        """
+        return self.params.mask_rescaler
+
+    @property
     def scale_factor(self) -> float:
         """
         Get the scale factor.
@@ -128,21 +146,54 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         """
         return self.params.scale_factor
 
-    def _remap_result_to_original_coordinates(self, result: ResultT) -> ResultT:
+    def _warn_if_mask_unused(self, mask: np.ndarray | None) -> None:
+        """
+        Warn when ``mask`` is passed to a detector that does not apply it.
+
+        Parameters
+        ----------
+        mask : np.ndarray | None
+            Mask argument from ``detect()``.
+        """
+        if mask is not None:
+            warnings.warn(
+                f"{type(self).__name__} does not use mask; the argument is ignored.",
+                UserWarning,
+                stacklevel=3,
+            )
+
+    def _scaled_detection_mask(self, mask: np.ndarray | None) -> np.ndarray | None:
+        """
+        Map an original-space mask into working (scaled) image coordinates.
+
+        Parameters
+        ----------
+        mask : np.ndarray | None
+            Boolean mask aligned with the input ``img`` passed to ``detect()``.
+
+        Returns
+        -------
+        np.ndarray | None
+            Mask with the same spatial extent as ``image_scaler(img)``, or None.
+        """
+        if mask is None:
+            return None
+        if mask.ndim != 2:
+            raise ValueError(f"mask must be a 2D array, got shape {mask.shape}")
+        return self.mask_rescaler(mask)
+
+    def _remap_result_to_original_coordinates(
+        self,
+        result: DetectionResultBase[Any, Any],
+    ) -> None:
         """
         Map detection coordinates from the working (scaled) image to the input image.
 
         Parameters
         ----------
-        result : ResultT
-            Detection result produced on ``image_scaler(img)``.
-
-        Returns
-        -------
-        ResultT
-            Same instance, with coordinates scaled by ``1.0 / scale_factor`` when needed.
+        result : DetectionResultBase[Any, Any]
+            Detection result produced on ``image_scaler(img)``; updated in place.
         """
         scale_factor = self.scale_factor
         if scale_factor != 1.0:
             result.scale_coordinates(1.0 / scale_factor)
-        return result

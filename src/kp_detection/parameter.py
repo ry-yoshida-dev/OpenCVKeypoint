@@ -26,12 +26,18 @@ class KPDetectionParameters:
     is_brief_applied: bool
         Whether to use brief descriptor extractor.
     scale_factor: float
-        Scale factor applied to the input image before detection (1.0 = no scaling).
+        Multiplier for resizing the input image before detection (1.0 = no scaling).
+        Detection runs on the rescaled working image; returned keypoint coordinates
+        are remapped to the original input image space by each detector.
     interpolation: OpenCVInterpolationFlag
         OpenCV interpolation flag used when scaling the input image.
     image_scaler: Callable[[np.ndarray], np.ndarray]
         Built once at init: identity when ``scale_factor`` is ``1.0``,
         otherwise ``cv2.resize`` with ``fx``/``fy`` = ``scale_factor``.
+    mask_rescaler: Callable[[np.ndarray], np.ndarray]
+        Built once at init: identity when ``scale_factor`` is ``1.0``,
+        otherwise ``cv2.resize`` with ``fx``/``fy`` = ``scale_factor`` and
+        ``interpolation=cv2.INTER_NEAREST`` (preserves binary masks).
     """
     method: KPDetectionMethod = KPDetectionMethod.SIFT
     is_brief_applied: bool = False
@@ -39,6 +45,7 @@ class KPDetectionParameters:
     interpolation: OpenCVInterpolationFlag = OpenCVInterpolationFlag.LINEAR
     brief: Any = field(init=False, default=None)
     image_scaler: Callable[[np.ndarray], np.ndarray] = field(init=False)
+    mask_rescaler: Callable[[np.ndarray], np.ndarray] = field(init=False)
 
     def __post_init__(self) -> None:
         """
@@ -46,6 +53,7 @@ class KPDetectionParameters:
         """
         self._validate()
         self.image_scaler = self._build_image_scaler()
+        self.mask_rescaler = self._build_mask_rescaler()
         if self.is_brief_applied:
             self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create() # type: ignore
 
@@ -86,6 +94,26 @@ class KPDetectionParameters:
             fx=scale,
             fy=scale,
             interpolation=interpolation,
+        )
+
+    def _build_mask_rescaler(self) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Build ``mask_rescaler`` from current ``scale_factor``.
+
+        Returns
+        -------
+        Callable[[np.ndarray], np.ndarray]
+            Identity when ``scale_factor`` is ``1.0``; otherwise nearest-neighbor resize.
+        """
+        if self.scale_factor == 1.0:
+            return lambda mask: mask
+        scale = self.scale_factor
+        return lambda mask: cv2.resize(
+            mask,
+            dsize=None,
+            fx=scale,
+            fy=scale,
+            interpolation=cv2.INTER_NEAREST,
         )
 
     def build_detector(self) -> KPDetector:

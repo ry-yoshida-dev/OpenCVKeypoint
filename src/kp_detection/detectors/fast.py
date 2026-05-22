@@ -54,7 +54,7 @@ class FASTDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult, KPDe
             keypoints=keypoints,
             descriptors=None,
         )
-        result = self._remap_result_to_original_coordinates(result)
+        self._remap_result_to_original_coordinates(result)
         if mask is not None:
             result.apply_mask(mask)
         return result

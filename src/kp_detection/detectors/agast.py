@@ -50,16 +50,18 @@ class AGASTDetector(KeyPointDetector[cv2.AgastFeatureDetector, cv2.Feature2D, KP
         KPDetectionResult
             The result of keypoint detection. 
         """
-        scaled = self.image_scaler(img)
-        keypoints = self.detector.detect(scaled, None)
-        keypoints, descriptors = self.extractor.compute(img, keypoints)
+        self._warn_if_mask_unused(mask)
+        scaled_image = self.image_scaler(img)
+        keypoints = self.detector.detect(scaled_image, None)
+        keypoints, descriptors = self.extractor.compute(scaled_image, keypoints)
 
         result = KPDetectionResult(
             method=self.params.method,
             keypoints=keypoints,
             descriptors=descriptors,
         )
-        return self._remap_result_to_original_coordinates(result)
+        self._remap_result_to_original_coordinates(result)
+        return result
 
     def __str__(self) -> str:
         return f"AGASTDetector(method={self.params.method})"

@@ -60,8 +60,7 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
         KPDetectionResult
             OpenCV keypoints; the descriptors field is an empty array (no float descriptors).
         """
-        if mask is not None and mask.ndim != 2:
-            raise ValueError(f"mask must be a 2D array, got shape {mask.shape}")
+        detection_mask = self._scaled_detection_mask(mask)
 
         if img.ndim == 2:
             working = self.image_scaler(img)
@@ -73,8 +72,8 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
 
         corner_response = self.harris_function(working)
 
-        if mask is not None:
-            corner_response *= mask
+        if detection_mask is not None:
+            corner_response *= detection_mask
 
         keypoints = np.argwhere(
             corner_response > self.params.corner_th * corner_response.max()
@@ -88,7 +87,8 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
             keypoints=keypoints,
             descriptors=None,
         )
-        return self._remap_result_to_original_coordinates(result)
+        self._remap_result_to_original_coordinates(result)
+        return result
 
     def __str__(self) -> str:
         return f"HarrisDetector(params={self.params!r})"

@@ -49,8 +49,10 @@ class MSERDetector(KeyPointDetector[cv2.Feature2D, cv2.Feature2D, KPDetectionRes
         KPDetectionResult
             The result of keypoint detection.
         """
+        self._warn_if_mask_unused(mask)
+        scaled_image = self.image_scaler(img)
         regions: list[np.ndarray]  # each region has shape ``(N, 2)``
-        regions, _ = self.detector.detectRegions(self.image_scaler(img)) # type: ignore
+        regions, _ = self.detector.detectRegions(scaled_image) # type: ignore
 
         keypoints = [
             cv2.KeyPoint(x=float(pt[0]), y=float(pt[1]), size=3.0) # type: ignore
@@ -62,7 +64,8 @@ class MSERDetector(KeyPointDetector[cv2.Feature2D, cv2.Feature2D, KPDetectionRes
             keypoints=keypoints,
             descriptors=np.array([]),
         )
-        return self._remap_result_to_original_coordinates(result)
+        self._remap_result_to_original_coordinates(result)
+        return result
 
     def __str__(self) -> str:
         return f"MSERDetector(method={self.params.method})"

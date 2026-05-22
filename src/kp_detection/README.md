@@ -10,7 +10,7 @@ Unified interface for keypoint detection using various OpenCV-backed algorithms.
 | Component | Description |
 | --------- | ----------- |
 | [`detector.py`](./detector.py) | Detector abstract base |
-| [`type_alias.py`](./type_alias.py) | `KPDetector`, `KPDetectionResult` aliases |
+| [`type_alias.py`](./type_alias.py) | `KPDetector` type alias |
 | [`parameter.py`](./parameter.py) | Detection parameters and `build_detector()` |
 | [`result.py`](./result.py) | Result abstract base and related types |
 | [`results/`](./results/) | `KPDetectionResult`, `ArrayKPDetectionResult` |
@@ -39,6 +39,8 @@ Descriptor column reflects `KPDetectionMethod.has_descriptor` and binary/float s
 
 Optional **BRIEF** post-descriptor (`KPDetectionParameters.is_brief_applied`) is only valid when `KPDetectionMethod.is_brief_supported()` is true (ORB, BRISK, AKAZE).
 
-`KPDetectionParameters` also exposes `scale_factor` (default `1.0`), `interpolation` (`OpenCVInterpolationFlag.LINEAR`), and `image_scaler` (built once in `__post_init__`: identity when `scale_factor == 1.0`, otherwise `cv2.resize` with `fx`/`fy`).
+`KPDetectionParameters` also exposes `scale_factor` (default `1.0`), `interpolation` (`OpenCVInterpolationFlag.LINEAR`), `image_scaler`, and `mask_rescaler` (both built once in `__post_init__`: identity when `scale_factor == 1.0`; otherwise `cv2.resize` with `fx`/`fy`. Masks use `INTER_NEAREST`).
 
-Detection results (`KPDetectionResult`, `ArrayKPDetectionResult`) implement `scale_coordinates(factor)` to multiply coordinates in place (and `cv2.KeyPoint.size` where applicable). After detection on a rescaled image, call `scale_coordinates(1.0 / params.scale_factor)` to map back to the original image space.
+Detectors that run on a scaled working image pass `_scaled_detection_mask(mask)` into OpenCV. `FASTDetector` applies the original-space mask after `_remap_result_to_original_coordinates` via `apply_mask`. `AGASTDetector`, `MSERDetector`, and `SimpleBlobDetector` ignore `mask` and emit `UserWarning` when it is not `None`.
+
+Detection results (`KPDetectionResult`, `ArrayKPDetectionResult`) implement `scale_coordinates(factor)` to multiply coordinates in place (and `cv2.KeyPoint.size` where applicable). Detectors call `_remap_result_to_original_coordinates` to map keypoints back to the input image space.
