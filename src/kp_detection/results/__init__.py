@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from ..result import KPT, KPElem, KeyPointDetectionResult, KPDetectionStep
+from typing import TypeAlias
+
+from ..result import KPT, KPElem, KPDetectionStep
 from .array import ArrayKPDetectionResult
 from .cv2_keypoint import KPDetectionResult
 
-KeyPointDetectionResult = KPDetectionResult | ArrayKPDetectionResult
+KeyPointDetectionResult: TypeAlias = KPDetectionResult | ArrayKPDetectionResult
 
 __all__ = [
     "KPT",

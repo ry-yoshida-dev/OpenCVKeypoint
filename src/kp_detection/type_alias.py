@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import Any, TypeAlias
 
 from .detector import KeyPointDetector
-from .result import KeyPointDetectionResult
+from .results import KeyPointDetectionResult
 
-KPDetector: TypeAlias = KeyPointDetector[Any, Any, Any, Any]
-KPDetectionResult: TypeAlias = KeyPointDetectionResult[Any, Any]
+# Union of the two concrete result types (cv2 KeyPoint vs ndarray).
+KPDetectionResult: TypeAlias = KeyPointDetectionResult
+
+KPDetector: TypeAlias = KeyPointDetector[Any, Any, KPDetectionResult, Any]
 
 __all__ = ["KPDetector", "KPDetectionResult"]

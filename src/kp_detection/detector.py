@@ -4,13 +4,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
-from .result import KeyPointDetectionResult as KPDetectionResultBase
 from .parameter import KPDetectionParameters
 from .method import KPDetectionMethod
+from .results import KeyPointDetectionResult as DetectionResultUnion
 
 DetectorT = TypeVar("DetectorT", bound=cv2.Feature2D | None)
 ExtractorT = TypeVar("ExtractorT", bound=cv2.Feature2D | None)
-ResultT = TypeVar("ResultT", bound=KPDetectionResultBase[Any, Any])
+ResultT = TypeVar("ResultT", bound=DetectionResultUnion, covariant=True)
 ParamsT = TypeVar("ParamsT", bound=KPDetectionParameters)
 
 @dataclass(repr=False, eq=False)
