@@ -9,7 +9,7 @@ from typing import cast
 from opencv_utility import OpenCVOutlierFilteringFlag
 from .match_container import KNNMatchGroup, MatchResult
 from .utils import GeometricConstraint
-from kp_detection import KPDetectionResult
+from kp_detection import DetectionResultUnion
 
 
 @dataclass
@@ -19,15 +19,15 @@ class PairedDetectionResult:
 
     Attributes:
     ----------
-    query_det_result: KPDetectionResult
+    query_det_result: DetectionResultUnion
         The query keypoint detection result.
-    gallery_det_result: KPDetectionResult
+    gallery_det_result: DetectionResultUnion
         The gallery keypoint detection result.
     match_result: MatchResult
         The match result.
     """
-    query_det_result: KPDetectionResult
-    gallery_det_result: KPDetectionResult
+    query_det_result: DetectionResultUnion
+    gallery_det_result: DetectionResultUnion
     match_result: MatchResult
 
     @property

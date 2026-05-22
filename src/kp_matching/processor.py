@@ -3,7 +3,7 @@ import numpy as np
 from .paired_detection_result import PairedDetectionResult
 from .match_container import MatchResult
 from .parameter import KPMatchingParameters
-from kp_detection import KPDetectionResult
+from kp_detection import DetectionResultUnion
 
 
 class KPMatchingProcessor:
@@ -68,20 +68,20 @@ class KPMatchingProcessor:
 
     def run_pipeline(
         self,
-        query_det_result: KPDetectionResult,
-        gallery_det_result: KPDetectionResult,
+        query_det_result: DetectionResultUnion,
+        gallery_det_result: DetectionResultUnion,
         ) -> PairedDetectionResult:
         """
         Match keypoints from two detection results and wrap the outcome in a PairedDetectionResult.
 
-        Descriptors are read from each ``KPDetectionResult``; coordinates and matches stay aligned
+        Descriptors are read from each detection result; coordinates and matches stay aligned
         with the original keypoint indices.
 
         Parameters:
         ----------
-        query_det_result: KPDetectionResult
+        query_det_result: DetectionResultUnion
             Detection result for the query image (must include descriptors).
-        gallery_det_result: KPDetectionResult
+        gallery_det_result: DetectionResultUnion
             Detection result for the gallery image (must include descriptors).
 
         Returns:
