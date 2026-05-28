@@ -19,12 +19,12 @@ classifiers = [
 dependencies = [
   "numpy",
   "opencv-contrib-python",
-  "opencv-utility @ git+https://github.com/ry-yoshida-private/OpenCVUtility.git",
+  "opencv-utility @ git+https://github.com/ry-yoshida-dev/OpenCVUtility.git",
 ]
 
 [project.urls]
-Homepage = "https://github.com/ry-yoshida-private/OpenCVKeypoint"
-"Bug Tracker" = "https://github.com/ry-yoshida-private/OpenCVKeypoint/issues"
+Homepage = "https://github.com/ry-yoshida-dev/OpenCVKeypoint"
+"Bug Tracker" = "https://github.com/ry-yoshida-dev/OpenCVKeypoint/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
