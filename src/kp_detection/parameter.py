@@ -126,7 +126,7 @@ class KPDetectionParameters:
 
         Returns:
         ----------
-        BuiltFromParametersKPDetector
+        KPDetector
             Detector instance for methods handled by KPDetectionParameters.
             Shi-Tomasi and Harris are built from ShiTomashiParameters and HarrisParameters.
         """

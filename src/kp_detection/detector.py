@@ -17,7 +17,7 @@ ResultT = TypeVar(
     bound=DetectionResultBase[Any, Any],
     covariant=True,
 )
-ParamsT = TypeVar("ParamsT", bound=KPDetectionParameters)
+ParamsT = TypeVar("ParamsT", bound=KPDetectionParameters, covariant=True)
 
 @dataclass(repr=False, eq=False)
 class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):

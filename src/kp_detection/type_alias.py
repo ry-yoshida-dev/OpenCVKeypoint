@@ -4,12 +4,12 @@ from typing import Any, TypeAlias
 
 from .detector import KeyPointDetector
 from .parameter import KPDetectionParameters
-from .results import KPDetectionResult
+from .results import DetectionResultUnion
 
 KPDetector: TypeAlias = KeyPointDetector[
     Any,
     Any,
-    KPDetectionResult,
+    DetectionResultUnion,
     KPDetectionParameters,
 ]
 
