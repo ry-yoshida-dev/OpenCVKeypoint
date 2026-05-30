@@ -6,13 +6,15 @@ OpenCVKeypoint is a unified repository that combines:
 
 - `kp_detection`: keypoint detection interfaces and implementations
 - `kp_matching`: keypoint matching interfaces and implementations
+- `optical_flow`: optical flow interfaces and implementations
 
-Both packages are provided under the same `src` layout so you can use detection and matching in a single project without managing separate repositories.
+All packages are provided under the same `src` layout so you can use detection, matching, and optical flow in a single project without managing separate repositories.
 
 For package/module-level details, see:
 
 - [`src/kp_detection/README.md`](src/kp_detection/README.md)
 - [`src/kp_matching/README.md`](src/kp_matching/README.md)
+- [`src/optical_flow/README.md`](src/optical_flow/README.md)
 
 ## Repository Structure
 
@@ -20,7 +22,8 @@ For package/module-level details, see:
 OpenCVKeypoint/
 ├─ src/
 │  ├─ kp_detection/
-│  └─ kp_matching/
+│  ├─ kp_matching/
+│  └─ optical_flow/
 ├─ tests/
 ├─ pyproject.toml
 ├─ requirements.txt
@@ -50,6 +53,8 @@ pip install -r requirements.txt
 Python 3.10 or newer is required.
 
 ## Example
+
+### Keypoint detection and matching
 
 ```python
 import cv2
@@ -116,4 +121,29 @@ matched_image = visualizer.draw_matches(
 output_path = "matched_result.jpg"
 cv2.imwrite(output_path, matched_image)
 print(f"saved visualization: {output_path}")
+```
+
+### Optical flow
+
+```python
+import cv2
+
+from kp_detection.detectors import ShiTomashiParameters
+from optical_flow import FarnebackFlow, FarnebackParameters, LucasKanadeFlow, LucasKanadeParameters
+
+source_image = cv2.imread("frame0.png", cv2.IMREAD_GRAYSCALE)
+target_image = cv2.imread("frame1.png", cv2.IMREAD_GRAYSCALE)
+if source_image is None or target_image is None:
+    raise FileNotFoundError("frame0.png or frame1.png was not found")
+
+dense_flow = FarnebackFlow(params=FarnebackParameters(scale_factor=0.5))
+flow_result = dense_flow.run(source_image, target_image)
+print(f"dense flow shape: {flow_result.flow.shape}")
+
+sparse_flow = LucasKanadeFlow(
+    params=LucasKanadeParameters(is_SparseRLOF=False, scale_factor=0.5),
+    keypoint_params=ShiTomashiParameters(max_corners=100),
+)
+sparse_result = sparse_flow.run(source_image, target_image)
+print(f"tracked keypoints: {len(sparse_result.target_keypoints)}")
 ```
