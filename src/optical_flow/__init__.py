@@ -1,5 +1,5 @@
 from .farneback import FarnebackFlow, FarnebackParameters, FarnebackResult
-from .lucas_canade import LucasKanadeFlow, LucasKanadeParameters, LucasKanadeResult
+from .lucas_kanade import LucasKanadeFlow, LucasKanadeParameters, LucasKanadeResult
 from .method import OpticalFlowMethod
 from .parameter import OpticalFlowParameters
 from .processor import OpticalFlowProcessor

@@ -1,4 +1,4 @@
-# lucas_canade
+# lucas_kanade
 
 ## Overview
 
@@ -11,7 +11,7 @@ Feature seeds are detected with Shi-Tomasi from `kp_detection`.
 | --------- | ----------- |
 | [`parameter.py`](./parameter.py) | Lucas-Kanade-specific OpenCV parameters |
 | [`processor.py`](./processor.py) | `LucasKanadeFlow` processor implementation |
-| [`result.py`](./result.py) | `LucasKanadeResult` sparse flow container with coordinate restoration |
+| [`result.py`](./result.py) | `LucasKanadeResult` sparse flow container with coordinate restoration and zero-track fallbacks |
 
 ## Examples
 

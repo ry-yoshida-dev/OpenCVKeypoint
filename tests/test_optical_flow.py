@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+import warnings
 
 import cv2
 import numpy as np
@@ -135,6 +136,49 @@ class TestLucasKanadeResultScale(unittest.TestCase):
 
         np.testing.assert_array_equal(result.source_keypoints, source_keypoints)
         np.testing.assert_array_equal(result.target_keypoints, target_keypoints)
+
+
+class TestLucasKanadeResultStatistics(unittest.TestCase):
+    def test_zero_tracked_keypoints_return_zeros_with_warning(self) -> None:
+        source_keypoints = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
+        target_keypoints = np.array([[10.0, 20.0], [30.0, 40.0]], dtype=np.float32)
+        status = np.zeros((2, 1), dtype=np.uint8)
+        error = np.ones((2, 1), dtype=np.float32)
+
+        with warnings.catch_warnings(record=True) as caught_warnings:
+            warnings.simplefilter("always")
+            result = LucasKanadeResult(
+                source_keypoints=source_keypoints,
+                target_keypoints=target_keypoints,
+                status=status,
+                error=error,
+            )
+
+        self.assertEqual(len(caught_warnings), 1)
+        self.assertEqual(caught_warnings[0].category, UserWarning)
+        self.assertIn("all status values are 0", str(caught_warnings[0].message))
+
+        np.testing.assert_allclose(result.mean_flow, np.zeros(2, dtype=np.float32))
+        self.assertEqual(result.mean_l2_norm, 0.0)
+        np.testing.assert_allclose(result.flow_std, np.zeros(2, dtype=np.float32))
+        self.assertEqual(len(result), 0)
+
+    def test_partial_tracking_statistics_use_successful_keypoints_only(self) -> None:
+        source_keypoints = np.array([[0.0, 0.0], [1.0, 1.0]], dtype=np.float32)
+        target_keypoints = np.array([[2.0, 0.0], [99.0, 99.0]], dtype=np.float32)
+        status = np.array([[1], [0]], dtype=np.uint8)
+        error = np.zeros((2, 1), dtype=np.float32)
+        result = LucasKanadeResult(
+            source_keypoints=source_keypoints,
+            target_keypoints=target_keypoints,
+            status=status,
+            error=error,
+        )
+
+        np.testing.assert_allclose(result.mean_flow, np.array([2.0, 0.0], dtype=np.float32))
+        self.assertEqual(result.mean_l2_norm, 2.0)
+        np.testing.assert_allclose(result.flow_std, np.zeros(2, dtype=np.float32))
+        self.assertEqual(len(result), 1)
 
 
 if __name__ == "__main__":

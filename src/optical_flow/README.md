@@ -14,7 +14,7 @@ result containers that restore coordinates to the original image via ``scale()``
 | [`processor.py`](./processor.py) | Abstract base class and shared scaling logic |
 | [`validator.py`](./validator.py) | Input validation and preprocessing helpers |
 | [`farneback/`](./farneback/) | Farneback dense optical flow |
-| [`lucas_canade/`](./lucas_canade/) | Lucas-Kanade sparse optical flow |
+| [`lucas_kanade/`](./lucas_kanade/) | Lucas-Kanade sparse optical flow |
 | [`method.py`](./method.py) | `OpticalFlowMethod` enum |
 
 ## Examples
