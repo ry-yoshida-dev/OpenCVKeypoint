@@ -1,44 +1,45 @@
 from __future__ import annotations
 
-import cv2
 import numpy as np
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Generic, TypeVar
 
 from ..method import OpticalFlowMethod
 from ..processor import OpticalFlowProcessor
-from ..validator import OpticalFlowValidator
+from ..utils import OpticalFlowPreprocessor, OpticalFlowValidator
 from .parameter import LucasKanadeParameters
+from .protocol import LucasKanadeFlowFunction
 from .result import LucasKanadeResult
 from kp_detection.detectors import ShiTomashiDetector, ShiTomashiParameters
 
+ParamsT = TypeVar("ParamsT", bound=LucasKanadeParameters)
+
 
 @dataclass(repr=False, eq=False)
-class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeResult]):
+class LucasKanadeFlow(
+    OpticalFlowProcessor[ParamsT, LucasKanadeResult],
+    ABC,
+    Generic[ParamsT],
+):
     """
-    LucasKanadeFlow is the processor for the Lucas-Kanade optical flow.
+    Abstract base processor for sparse Lucas-Kanade optical flow.
 
-    Attributes:
+    Attributes
     ----------
-    params: LucasKanadeParameters
-        The parameters for the Lucas-Kanade optical flow.
+    params: ParamsT
+        Parameters for the selected sparse flow variant.
     keypoint_params: ShiTomashiParameters
-        The parameters for Shi-Tomasi keypoint detection.
+        Parameters for Shi-Tomasi keypoint detection.
     shi_tomashi_detector: ShiTomashiDetector
-        The detector for Shi-Tomasi keypoint detection.
-    flow_function: Callable[
-        [np.ndarray, np.ndarray, np.ndarray, np.ndarray | None],
-        tuple[np.ndarray, np.ndarray, np.ndarray],
-    ]
-        OpenCV optical flow callable. The fourth argument is ``nextPts`` for PyrLK.
+        Detector used to seed sparse flow keypoints.
+    flow_function: LucasKanadeFlowFunction
+        Sparse flow callable selected by ``params.get_flow_func()``.
     """
-    params: LucasKanadeParameters
+    params: ParamsT
     keypoint_params: ShiTomashiParameters
     shi_tomashi_detector: ShiTomashiDetector = field(init=False)
-    flow_function: Callable[
-        [np.ndarray, np.ndarray, np.ndarray, np.ndarray | None],
-        tuple[np.ndarray, np.ndarray, np.ndarray],
-    ] = field(init=False)
+    flow_function: LucasKanadeFlowFunction = field(init=False)
 
     def __post_init__(self) -> None:
         self.shi_tomashi_detector = self.keypoint_params.build_detector()
@@ -51,7 +52,7 @@ class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeRes
         mask: np.ndarray | None = None,
     ) -> LucasKanadeResult:
         """
-        Run Lucas-Kanade optical flow.
+        Run sparse Lucas-Kanade optical flow.
 
         Parameters
         ----------
@@ -64,16 +65,16 @@ class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeRes
             The mask constrains Shi-Tomasi keypoint detection only.
 
         Returns
-        ----------
+        -------
         LucasKanadeResult
-            The result of Lucas-Kanade optical flow in original-image coordinates.
+            Sparse flow result in original-image coordinates.
         """
         OpticalFlowValidator.validate_run_inputs(source_image, target_image, mask=mask)
 
         preprocessed_source = self.preprocess_image(source_image)
         preprocessed_target = self.preprocess_image(target_image)
         preprocessed_mask = self.preprocess_mask(mask)
-        detection_mask = OpticalFlowValidator.prepare_detection_mask(preprocessed_mask)
+        detection_mask = OpticalFlowPreprocessor.prepare_detection_mask(preprocessed_mask)
 
         source_keypoints = self._get_source_keypoints(
             preprocessed_source,
@@ -94,7 +95,7 @@ class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeRes
         source_keypoints: np.ndarray,
     ) -> LucasKanadeResult:
         """
-        Compute Lucas-Kanade flow on preprocessed inputs.
+        Compute sparse flow on preprocessed inputs.
 
         Parameters
         ----------
@@ -108,13 +109,12 @@ class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeRes
         Returns
         -------
         LucasKanadeResult
-            The result of Lucas-Kanade optical flow in preprocessed-image coordinates.
+            Sparse flow result in preprocessed-image coordinates.
         """
         target_keypoints, status, error = self.flow_function(
             source_image,
             target_image,
             source_keypoints,
-            None,  # nextPts: let OpenCV allocate tracked points
         )
         return LucasKanadeResult(
             source_keypoints=source_keypoints,
@@ -129,19 +129,19 @@ class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeRes
         mask: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Get the source keypoints from a preprocessed source image.
+        Get source keypoints from a preprocessed source image.
 
-        Parameters:
+        Parameters
         ----------
         source_image: np.ndarray
             Preprocessed source image.
         mask: np.ndarray | None
             Preprocessed mask.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray
-            Source keypoints in preprocessed-image coordinates.
+            Source keypoints with shape ``(N, 2)`` and dtype ``float32``.
         """
         source_keypoints = np.array(
             self.shi_tomashi_detector.detect(source_image, mask=mask).keypoints
@@ -150,39 +150,28 @@ class LucasKanadeFlow(OpticalFlowProcessor[LucasKanadeParameters, LucasKanadeRes
         if np.any(np.isnan(source_keypoints)):
             raise NotImplementedError("No previous keypoints found.")
 
-        source_keypoints = source_keypoints.reshape(-1, 2)
+        return source_keypoints.reshape(-1, 2).astype(np.float32)
 
-        return source_keypoints.astype(np.float32)
-
-    def _preprocess_image(
-        self,
-        image: np.ndarray,
-    ) -> np.ndarray:
+    @abstractmethod
+    def _preprocess_image(self, image: np.ndarray) -> np.ndarray:
         """
-        Preprocess the image for Lucas-Kanade optical flow.
+        Apply method-specific preprocessing to a rescaled image.
 
         Parameters
         ----------
         image: np.ndarray
-            The image to preprocess.
+            Rescaled input image.
 
         Returns
         -------
         np.ndarray
-            The preprocessed image.
+            Image ready for sparse flow computation.
         """
-        grayscale_image = OpticalFlowValidator.to_grayscale(image)
-        if self.params.is_SparseRLOF:
-            return cv2.cvtColor(grayscale_image, cv2.COLOR_GRAY2BGR)
-        return grayscale_image
-
-    def __str__(self) -> str:
-        return f"LucasKanadeFlow(params={self.params!r}, keypoint_params={self.keypoint_params!r})"
 
     @property
+    @abstractmethod
     def method(self) -> OpticalFlowMethod:
-        match self.params.is_SparseRLOF:
-            case True:
-                return OpticalFlowMethod.SPARSE_LUCAS_KANADE
-            case False:
-                return OpticalFlowMethod.LUCAS_KANADE
+        """Return the optical flow method enum for this processor."""
+
+    def __str__(self) -> str:
+        return f"{type(self).__name__}(params={self.params!r}, keypoint_params={self.keypoint_params!r})"

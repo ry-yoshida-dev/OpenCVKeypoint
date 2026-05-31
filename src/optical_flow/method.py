@@ -35,6 +35,9 @@ class OpticalFlowMethod(Enum):
             case OpticalFlowMethod.FARNEBACK:
                 from .farneback import FarnebackFlow
                 return FarnebackFlow
-            case OpticalFlowMethod.LUCAS_KANADE | OpticalFlowMethod.SPARSE_LUCAS_KANADE:
-                from .lucas_kanade import LucasKanadeFlow
-                return LucasKanadeFlow
+            case OpticalFlowMethod.LUCAS_KANADE:
+                from .lucas_kanade.pyr_lk import PyrLKFlow
+                return PyrLKFlow
+            case OpticalFlowMethod.SPARSE_LUCAS_KANADE:
+                from .lucas_kanade.sparse_rlof import SparseRLOFFlow
+                return SparseRLOFFlow

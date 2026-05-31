@@ -129,7 +129,7 @@ print(f"saved visualization: {output_path}")
 import cv2
 
 from kp_detection.detectors import ShiTomashiParameters
-from optical_flow import FarnebackFlow, FarnebackParameters, LucasKanadeFlow, LucasKanadeParameters
+from optical_flow import FarnebackFlow, FarnebackParameters, PyrLKFlow, PyrLKParameters
 
 source_image = cv2.imread("frame0.png", cv2.IMREAD_GRAYSCALE)
 target_image = cv2.imread("frame1.png", cv2.IMREAD_GRAYSCALE)
@@ -140,8 +140,8 @@ dense_flow = FarnebackFlow(params=FarnebackParameters(scale_factor=0.5))
 flow_result = dense_flow.run(source_image, target_image)
 print(f"dense flow shape: {flow_result.flow.shape}")
 
-sparse_flow = LucasKanadeFlow(
-    params=LucasKanadeParameters(is_SparseRLOF=False, scale_factor=0.5),
+sparse_flow = PyrLKFlow(
+    params=PyrLKParameters(scale_factor=0.5),
     keypoint_params=ShiTomashiParameters(max_corners=100),
 )
 sparse_result = sparse_flow.run(source_image, target_image)

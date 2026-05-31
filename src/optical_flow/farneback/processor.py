@@ -6,7 +6,7 @@ from typing import Callable
 
 from ..method import OpticalFlowMethod
 from ..processor import OpticalFlowProcessor
-from ..validator import OpticalFlowValidator
+from ..utils import OpticalFlowPreprocessor, OpticalFlowValidator
 from .parameter import FarnebackParameters
 from .result import FarnebackResult
 
@@ -34,7 +34,7 @@ class FarnebackFlow(OpticalFlowProcessor[FarnebackParameters, FarnebackResult]):
         return OpticalFlowMethod.FARNEBACK
 
     def _preprocess_image(self, image: np.ndarray) -> np.ndarray:
-        return OpticalFlowValidator.to_grayscale(image)
+        return OpticalFlowPreprocessor.to_grayscale(image)
 
     def run(
         self,

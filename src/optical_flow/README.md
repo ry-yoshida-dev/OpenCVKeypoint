@@ -12,7 +12,7 @@ result containers that restore coordinates to the original image via ``scale()``
 | --------- | ----------- |
 | [`parameter.py`](./parameter.py) | Base parameters including scale factor and interpolation flag |
 | [`processor.py`](./processor.py) | Abstract base class and shared scaling logic |
-| [`validator.py`](./validator.py) | Input validation and preprocessing helpers |
+| [`utils/`](./utils/) | Input validation and image preprocessing helpers |
 | [`farneback/`](./farneback/) | Farneback dense optical flow |
 | [`lucas_kanade/`](./lucas_kanade/) | Lucas-Kanade sparse optical flow |
 | [`method.py`](./method.py) | `OpticalFlowMethod` enum |
@@ -24,16 +24,16 @@ from kp_detection.detectors import ShiTomashiParameters
 from optical_flow import (
     FarnebackFlow,
     FarnebackParameters,
-    LucasKanadeFlow,
-    LucasKanadeParameters,
     OpticalFlowMethod,
     OpticalFlowProcessor,
+    PyrLKFlow,
+    PyrLKParameters,
 )
 
 processors: list[OpticalFlowProcessor] = [
     FarnebackFlow(params=FarnebackParameters(scale_factor=0.5)),
-    LucasKanadeFlow(
-        params=LucasKanadeParameters(is_SparseRLOF=False, scale_factor=0.5),
+    PyrLKFlow(
+        params=PyrLKParameters(scale_factor=0.5),
         keypoint_params=ShiTomashiParameters(),
     ),
 ]

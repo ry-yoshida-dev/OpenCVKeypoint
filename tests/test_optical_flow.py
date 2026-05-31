@@ -13,18 +13,21 @@ from optical_flow import (
     FarnebackFlow,
     FarnebackParameters,
     FarnebackResult,
-    LucasKanadeFlow,
-    LucasKanadeParameters,
     LucasKanadeResult,
+    OpticalFlowPreprocessor,
     OpticalFlowValidator,
+    PyrLKFlow,
+    PyrLKParameters,
+    SparseRLOFFlow,
+    SparseRLOFParameters,
 )
 
 
 class TestOpticalFlowValidation(unittest.TestCase):
     def setUp(self) -> None:
         self.farneback = FarnebackFlow(params=FarnebackParameters())
-        self.lucas_kanade = LucasKanadeFlow(
-            params=LucasKanadeParameters(is_SparseRLOF=False),
+        self.lucas_kanade = PyrLKFlow(
+            params=PyrLKParameters(),
             keypoint_params=ShiTomashiParameters(max_corners=20),
         )
 
@@ -65,7 +68,7 @@ class TestOpticalFlowMaskHandling(unittest.TestCase):
         mask[20:60, 20:60] = 1
         original_mask = mask.copy()
 
-        prepared_mask = OpticalFlowValidator.prepare_detection_mask(mask)
+        prepared_mask = OpticalFlowPreprocessor.prepare_detection_mask(mask)
 
         np.testing.assert_array_equal(mask, original_mask)
         self.assertIsNot(prepared_mask, mask)
@@ -106,7 +109,7 @@ class TestLucasKanadeResultScale(unittest.TestCase):
             status=status,
             error=error,
         )
-        params = LucasKanadeParameters(scale_factor=0.5)
+        params = PyrLKParameters(scale_factor=0.5)
 
         result.scale(params)
 
@@ -130,7 +133,7 @@ class TestLucasKanadeResultScale(unittest.TestCase):
             status=status,
             error=error,
         )
-        params = LucasKanadeParameters(scale_factor=1.0)
+        params = PyrLKParameters(scale_factor=1.0)
 
         result.scale(params)
 
@@ -179,6 +182,49 @@ class TestLucasKanadeResultStatistics(unittest.TestCase):
         self.assertEqual(result.mean_l2_norm, 2.0)
         np.testing.assert_allclose(result.flow_std, np.zeros(2, dtype=np.float32))
         self.assertEqual(len(result), 1)
+
+
+class TestLucasKanadeSparseRLOF(unittest.TestCase):
+    def setUp(self) -> None:
+        self.source_image = np.zeros((120, 160, 3), dtype=np.uint8)
+        cv2.rectangle(self.source_image, (20, 20), (100, 80), (255, 255, 255), -1)
+        self.target_image = np.roll(np.roll(self.source_image, 4, axis=1), 2, axis=0)
+        self.keypoint_params = ShiTomashiParameters(max_corners=30)
+
+    def test_sparse_rlof_tracks_synthetic_shift(self) -> None:
+        flow = SparseRLOFFlow(
+            params=SparseRLOFParameters(),
+            keypoint_params=self.keypoint_params,
+        )
+
+        result = flow.run(self.source_image, self.target_image)
+
+        self.assertGreater(len(result), 0)
+        np.testing.assert_allclose(result.mean_flow[0], 4.0, atol=1.0)
+        np.testing.assert_allclose(result.mean_flow[1], 2.0, atol=1.0)
+
+    def test_sparse_rlof_matches_pyr_lk_on_same_input(self) -> None:
+        pyr_lk = PyrLKFlow(
+            params=PyrLKParameters(),
+            keypoint_params=self.keypoint_params,
+        )
+        sparse_rlof = SparseRLOFFlow(
+            params=SparseRLOFParameters(),
+            keypoint_params=self.keypoint_params,
+        )
+
+        pyr_lk_result = pyr_lk.run(self.source_image, self.target_image)
+        sparse_rlof_result = sparse_rlof.run(self.source_image, self.target_image)
+
+        np.testing.assert_allclose(
+            pyr_lk_result.source_keypoints,
+            sparse_rlof_result.source_keypoints,
+        )
+        np.testing.assert_allclose(
+            pyr_lk_result.mean_flow,
+            sparse_rlof_result.mean_flow,
+            atol=0.5,
+        )
 
 
 if __name__ == "__main__":
