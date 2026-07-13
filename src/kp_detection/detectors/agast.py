@@ -6,7 +6,14 @@ from ..detector import KeyPointDetector
 from ..parameter import KPDetectionParameters
 from ..results import KPDetectionResult
 
-class AGASTDetector(KeyPointDetector[cv2.AgastFeatureDetector, cv2.Feature2D, KPDetectionResult, KPDetectionParameters]):
+# cv2.AgastFeatureDetector was moved to opencv_contrib's xfeatures2d module in
+# OpenCV 5.0, and some opencv-contrib-python 5.x wheels do not compile that
+# module in at all. Fall back to the always-present Feature2D base for the
+# generic type parameter so this class can still be imported; _define_detector
+# raises a clear error if the detector is actually instantiated on such builds.
+_AgastFeatureDetector = getattr(cv2, "AgastFeatureDetector", cv2.Feature2D)
+
+class AGASTDetector(KeyPointDetector[_AgastFeatureDetector, cv2.Feature2D, KPDetectionResult, KPDetectionParameters]):
     """
     AGAST detector.
 
@@ -15,19 +22,43 @@ class AGASTDetector(KeyPointDetector[cv2.AgastFeatureDetector, cv2.Feature2D, KP
     detector: cv2.AgastFeatureDetector
     extractor: cv2.Feature2D
         BRIEF descriptor extractor (cv2.xfeatures2d.BriefDescriptorExtractor_create).
+
+    Notes:
+    ----------
+    Requires an OpenCV build exposing ``cv2.AgastFeatureDetector_create`` and
+    ``cv2.xfeatures2d.BriefDescriptorExtractor_create``. Both moved to
+    opencv_contrib's xfeatures2d module in OpenCV 5.0, and some
+    opencv-contrib-python 5.x wheels do not compile that module in; on such
+    builds this class can still be imported, but instantiation raises
+    RuntimeError.
     """
 
-    def _define_detector(self) -> tuple[cv2.AgastFeatureDetector, cv2.Feature2D]:
+    def _define_detector(self) -> tuple[cv2.Feature2D, cv2.Feature2D]:
         """
         Define the detector.
 
         Returns:
         ----------
-        tuple[cv2.AgastFeatureDetector, cv2.Feature2D]
+        tuple[cv2.Feature2D, cv2.Feature2D]
             AGAST detector and BRIEF extractor.
+
+        Raises:
+        ----------
+        RuntimeError
+            If the installed OpenCV build does not expose AGAST and/or BRIEF.
         """
-        detector = cv2.AgastFeatureDetector_create() # type: ignore
-        extractor = cv2.xfeatures2d.BriefDescriptorExtractor_create() # type: ignore
+        agast_create = getattr(cv2, "AgastFeatureDetector_create", None)
+        brief_create = getattr(getattr(cv2, "xfeatures2d", None), "BriefDescriptorExtractor_create", None)
+        if agast_create is None or brief_create is None:
+            raise RuntimeError(
+                f"AGAST/BRIEF are unavailable in this OpenCV build (cv2 {cv2.__version__}). "
+                "They live in opencv_contrib's xfeatures2d module, which this build does "
+                "not compile in. Install an OpenCV build that provides "
+                "cv2.AgastFeatureDetector_create/cv2.xfeatures2d.BriefDescriptorExtractor_create, "
+                "or select a different KPDetectionMethod."
+            )
+        detector = agast_create()
+        extractor = brief_create()
         return detector, extractor # type: ignore
 
     def detect(
