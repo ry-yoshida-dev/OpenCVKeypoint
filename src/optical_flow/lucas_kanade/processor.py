@@ -143,8 +143,10 @@ class LucasKanadeFlow(
         np.ndarray
             Source keypoints with shape ``(N, 2)`` and dtype ``float32``.
         """
+        # Sparse RLOF works on 3-channel images, but Shi-Tomasi needs grayscale.
+        detection_image = OpticalFlowPreprocessor.to_grayscale(source_image)
         source_keypoints = np.array(
-            self.shi_tomashi_detector.detect(source_image, mask=mask).keypoints
+            self.shi_tomashi_detector.detect(detection_image, mask=mask).keypoints
         )
 
         if np.any(np.isnan(source_keypoints)):

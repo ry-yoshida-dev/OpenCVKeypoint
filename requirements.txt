@@ -1,4 +1,4 @@
 numpy
 pytest
-opencv-contrib-python
+opencv-contrib-python>=5.0
 opencv-utility @ git+https://github.com/ry-yoshida-dev/OpenCVUtility.git

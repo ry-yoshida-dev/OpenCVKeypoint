@@ -8,7 +8,7 @@ resolution-markers = [
 ]
 
 [options]
-exclude-newer = "2026-10-31T12:57:14.799898Z"
+exclude-newer = "2026-10-31T16:15:59.91429Z"
 exclude-newer-span = "P7D"
 
 [[package]]
@@ -270,7 +270,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "numpy" },
-    { name = "opencv-contrib-python" },
+    { name = "opencv-contrib-python", specifier = ">=5.0" },
     { name = "opencv-utility", git = "https://github.com/ry-yoshida-dev/OpenCVUtility.git" },
 ]
 

@@ -72,11 +72,11 @@ class StandardKPDetector(KeyPointDetector[cv2.Feature2D, None, KPDetectionResult
             case KPDetectionMethod.SIFT:
                 detector = cv2.SIFT_create() # type: ignore
             case KPDetectionMethod.BRISK:
-                detector = cv2.BRISK_create() # type: ignore
+                detector = cv2.xfeatures2d.BRISK_create() # type: ignore
             case KPDetectionMethod.AKAZE:
-                detector = cv2.AKAZE_create() # type: ignore
+                detector = cv2.xfeatures2d.AKAZE_create() # type: ignore
             case KPDetectionMethod.KAZE:
-                detector = cv2.KAZE_create() # type: ignore
+                detector = cv2.xfeatures2d.KAZE_create() # type: ignore
             case _:
                 raise ValueError(f"Invalid method: {self.params.method}")
         return detector, None # type: ignore
