@@ -37,3 +37,6 @@ optical_flow = ["py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test.py", "test_*.py", "*_test.py"]
+
+[tool.uv]
+exclude-newer = "7 days"
