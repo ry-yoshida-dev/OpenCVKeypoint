@@ -2,8 +2,7 @@
 
 ## Overview
 
-Supporting helpers for optical flow processors. These modules are not primary flow
-algorithms; they validate inputs and prepare images before computation.
+Input validation and image preprocessing for the optical flow processors.
 
 ## Components
 

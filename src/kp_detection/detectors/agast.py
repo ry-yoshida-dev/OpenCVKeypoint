@@ -75,6 +75,7 @@ class AGASTDetector(KeyPointDetector[_AgastFeatureDetector, cv2.Feature2D, KPDet
             Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
+            Ignored by this detector; a ``UserWarning`` is emitted when it is not ``None``.
 
         Returns:
         ----------

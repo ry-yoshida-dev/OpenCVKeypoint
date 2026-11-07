@@ -4,7 +4,7 @@
 
 Unified interface for optical flow computation using OpenCV-backed algorithms.
 Processors inherit from `OpticalFlowProcessor`, share `OpticalFlowParameters`, and return
-result containers that restore coordinates to the original image via ``scale()``.
+result containers that restore coordinates to the original image via `scale()`.
 
 ## Components
 
@@ -12,38 +12,17 @@ result containers that restore coordinates to the original image via ``scale()``
 | --------- | ----------- |
 | [`parameter.py`](./parameter.py) | Base parameters including scale factor and interpolation flag |
 | [`processor.py`](./processor.py) | Abstract base class and shared scaling logic |
-| [`utils/`](./utils/) | Input validation and image preprocessing helpers |
-| [`farneback/`](./farneback/) | Farneback dense optical flow |
-| [`lucas_kanade/`](./lucas_kanade/) | Lucas-Kanade sparse optical flow |
+| [`utils/`](./utils/README.md) | Input validation and image preprocessing helpers |
+| [`farneback/`](./farneback/README.md) | Farneback dense optical flow |
+| [`lucas_kanade/`](./lucas_kanade/README.md) | Lucas-Kanade sparse optical flow |
 | [`method.py`](./method.py) | `OpticalFlowMethod` enum |
 
 ## Examples
 
 ```python
-from kp_detection.detectors import ShiTomashiParameters
-from optical_flow import (
-    FarnebackFlow,
-    FarnebackParameters,
-    OpticalFlowMethod,
-    OpticalFlowProcessor,
-    PyrLKFlow,
-    PyrLKParameters,
-)
+from optical_flow import FarnebackFlow, FarnebackParameters, OpticalFlowMethod
 
-processors: list[OpticalFlowProcessor] = [
-    FarnebackFlow(params=FarnebackParameters(scale_factor=0.5)),
-    PyrLKFlow(
-        params=PyrLKParameters(scale_factor=0.5),
-        keypoint_params=ShiTomashiParameters(),
-    ),
-]
-
-for processor in processors:
-    match processor.method:
-        case OpticalFlowMethod.FARNEBACK:
-            result = processor.run(source_image, target_image)
-            flow = result.flow
-        case OpticalFlowMethod.LUCAS_KANADE:
-            result = processor.run(source_image, target_image)
-            keypoints = result.target_keypoints
+processor = FarnebackFlow(params=FarnebackParameters(scale_factor=0.5))
+assert processor.method is OpticalFlowMethod.FARNEBACK
+flow = processor.run(source_image, target_image).flow
 ```

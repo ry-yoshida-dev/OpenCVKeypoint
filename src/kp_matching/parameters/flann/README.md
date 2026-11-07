@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains FLANN-specific parameter models for approximate nearest-neighbor matching.
+FLANN parameters for approximate nearest-neighbour matching.
 
 ## Components
 
