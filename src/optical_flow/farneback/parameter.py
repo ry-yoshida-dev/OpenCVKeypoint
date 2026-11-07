@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
+
 import cv2
 import numpy as np
-from dataclasses import dataclass
-from typing import Callable
 
 from ..parameter import OpticalFlowParameters
 
@@ -13,7 +15,7 @@ class FarnebackParameters(OpticalFlowParameters):
     """
     FarnebackParameters is the parameters for the Farneback optical flow processor.
 
-    Attributes:
+    Attributes
     ----------
     pyr_scale: float
         The pyramid scale.
@@ -30,6 +32,7 @@ class FarnebackParameters(OpticalFlowParameters):
     flags: int
         The flags.
     """
+
     pyr_scale: float = 0.5
     levels: int = 3
     winsize: int = 15
@@ -39,15 +42,25 @@ class FarnebackParameters(OpticalFlowParameters):
     flags: int = 0
 
     def define_function(self) -> Callable[[np.ndarray, np.ndarray], np.ndarray]:
-        return lambda source_image, target_image: cv2.calcOpticalFlowFarneback(
-            prev=source_image,
-            next=target_image,
-            flow=None,  # type: ignore[arg-type]
-            pyr_scale=self.pyr_scale,
-            levels=self.levels,
-            winsize=self.winsize,
-            iterations=self.iterations,
-            poly_n=self.poly_n,
-            poly_sigma=self.poly_sigma,
-            flags=self.flags,
-        )
+        """Build the dense flow function bound to these parameters."""
+
+        def compute_flow(
+            source_image: np.ndarray, target_image: np.ndarray
+        ) -> np.ndarray:
+            # OpenCV allocates the flow field when flow is None, but its stubs do
+            # not accept None there.
+            flow = cv2.calcOpticalFlowFarneback(  # type: ignore[call-overload]  # pyright: ignore[reportCallIssue, reportUnknownVariableType]
+                prev=source_image,
+                next=target_image,
+                flow=None,  # pyright: ignore[reportArgumentType]
+                pyr_scale=self.pyr_scale,
+                levels=self.levels,
+                winsize=self.winsize,
+                iterations=self.iterations,
+                poly_n=self.poly_n,
+                poly_sigma=self.poly_sigma,
+                flags=self.flags,
+            )
+            return cast(np.ndarray, flow)
+
+        return compute_flow

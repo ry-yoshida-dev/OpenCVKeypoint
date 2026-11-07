@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
+
+import numpy as np
+from typing_extensions import override
 
 from ..method import OpticalFlowMethod
 from ..processor import OpticalFlowProcessor
@@ -16,13 +18,14 @@ class FarnebackFlow(OpticalFlowProcessor[FarnebackParameters, FarnebackResult]):
     """
     FarnebackFlow is the processor for the Farneback optical flow.
 
-    Attributes:
+    Attributes
     ----------
     params: FarnebackParameters
         The parameters for the Farneback optical flow.
     function: Callable[[np.ndarray, np.ndarray], np.ndarray]
         The function for the optical flow.
     """
+
     params: FarnebackParameters
     function: Callable[[np.ndarray, np.ndarray], np.ndarray] = field(init=False)
 
@@ -30,12 +33,16 @@ class FarnebackFlow(OpticalFlowProcessor[FarnebackParameters, FarnebackResult]):
         self.function = self.params.define_function()
 
     @property
+    @override
     def method(self) -> OpticalFlowMethod:
+        """Optical flow method implemented by this processor."""
         return OpticalFlowMethod.FARNEBACK
 
+    @override
     def _preprocess_image(self, image: np.ndarray) -> np.ndarray:
         return OpticalFlowPreprocessor.to_grayscale(image)
 
+    @override
     def run(
         self,
         source_image: np.ndarray,
@@ -77,5 +84,6 @@ class FarnebackFlow(OpticalFlowProcessor[FarnebackParameters, FarnebackResult]):
         )
         return result
 
+    @override
     def __str__(self) -> str:
         return f"FarnebackFlow(params={self.params!r})"

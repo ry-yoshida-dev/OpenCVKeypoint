@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
-
-from dataclasses import dataclass
-from typing import Sequence
+from typing_extensions import override
 
 from ..result import KeyPointDetectionResult, KPDetectionStep
 
@@ -18,10 +19,10 @@ class KPDetectionResult(
 ):
     """
     Keypoint detection result backed by a tuple or list of cv2.KeyPoint.
+
     Typical for detectors that return OpenCV keypoints (e.g. ORB, SIFT).
 
-
-    Attributes:
+    Attributes
     ----------
     method: KPDetectionMethod
         The detection method that produced this result (from the base class).
@@ -33,28 +34,30 @@ class KPDetectionResult(
 
     keypoints: Sequence[cv2.KeyPoint]
 
+    @override
     def __len__(self) -> int:
         """
-        Number of keypoints.
+        Return the number of keypoints.
 
-        Returns:
-        ----------
+        Returns
+        -------
         int:
             Length of the keypoints sequence.
         """
         return len(self.keypoints)
 
+    @override
     def __getitem__(self, index: int) -> KPDetectionStep[cv2.KeyPoint]:
         """
         Return the cv2.KeyPoint and optional descriptor at index.
 
-        Parameters:
+        Parameters
         ----------
         index: int
             Zero-based index into the keypoint sequence.
 
-        Returns:
-        ----------
+        Returns
+        -------
         KPDetectionStep[cv2.KeyPoint]:
             (keypoint, descriptor_row_or_none).
         """
@@ -62,12 +65,13 @@ class KPDetectionResult(
             return (self.keypoints[index], None)
         return (self.keypoints[index], self.descriptors[index])
 
+    @override
     def __str__(self) -> str:
         """
         Short summary with keypoint count and descriptor shape.
 
-        Returns:
-        ----------
+        Returns
+        -------
         str:
             String representation for logging or display.
         """
@@ -82,76 +86,82 @@ class KPDetectionResult(
         )
 
     @property
+    @override
     def x(self) -> np.ndarray:
         """
         X coordinates from each keypoint's pt[0].
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             1-D array with shape ``(N,)`` (dtype inferred by NumPy).
         """
         return np.array([kp.pt[0] for kp in self.keypoints])
 
     @property
+    @override
     def y(self) -> np.ndarray:
         """
         Y coordinates from each keypoint's pt[1].
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             1-D array with shape ``(N,)`` (dtype inferred by NumPy).
         """
         return np.array([kp.pt[1] for kp in self.keypoints])
 
     @property
+    @override
     def coordinates(self) -> np.ndarray:
         """
         Stacked (x, y) pairs from each keypoint's pt.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Shape ``(N, 2)``.
         """
         return np.array([kp.pt for kp in self.keypoints])
 
     @property
+    @override
     def angles(self) -> np.ndarray:
         """
         Orientation in degrees from each keypoint's angle attribute.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             1-D array with shape ``(N,)``.
         """
         return np.array([kp.angle for kp in self.keypoints])
 
     @property
+    @override
     def sizes(self) -> np.ndarray:
         """
         Feature diameter / scale from each keypoint's size attribute.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             1-D array with shape ``(N,)``.
         """
         return np.array([kp.size for kp in self.keypoints])
 
+    @override
     def scale_coordinates(self, factor: float) -> None:
         """
         Scale cv2.KeyPoint positions and sizes in place.
 
-        Parameters:
+        Parameters
         ----------
         factor: float
             Multiplier for ``pt`` and ``size`` of each keypoint.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If factor is not positive.
         """
@@ -174,23 +184,23 @@ class KPDetectionResult(
         """
         Apply a mask to the keypoints.
 
-        Parameters:
+        Parameters
         ----------
         mask: np.ndarray
             A boolean mask (0 = ignore, 1 = include).
         """
         kp_array = np.array([kp.pt for kp in self.keypoints])
-        
+
         ix = np.round(kp_array[:, 0]).astype(int)
         iy = np.round(kp_array[:, 1]).astype(int)
         h, w = mask.shape[:2]
         valid = (ix >= 0) & (ix < w) & (iy >= 0) & (iy < h)
-        
+
         keep = np.zeros(len(self.keypoints), dtype=bool)
         keep[valid] = mask[iy[valid], ix[valid]] > 0
-        
+
         indices = np.flatnonzero(keep)
-        
+
         self.keypoints = [self.keypoints[int(i)] for i in indices]
         if self.descriptors is not None:
             self.descriptors = self.descriptors[indices]

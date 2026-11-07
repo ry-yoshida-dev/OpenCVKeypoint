@@ -1,21 +1,18 @@
-from .paired_detection_result import PairedDetectionResult
-from .processor import KPMatchingProcessor
+from opencv_utility import OpenCVOutlierFilteringFlag
+
 from .match_container import MatchResult
 from .method import KPMatchMethod
+from .paired_detection_result import PairedDetectionResult
 from .parameter import KPMatchingParameters
 from .parameters import (
-    KPMatchCommonParameters, 
-    RatioTestParameters, 
+    FLANNIndexType,
     FLANNParameters,
-    FLANNIndexType
-    )
-from .visualizer import (
-    MatchingVisualizer, 
-    DrawMatchFlags
-    )
+    KPMatchCommonParameters,
+    RatioTestParameters,
+)
+from .processor import KPMatchingProcessor
 from .utils import GeometricConstraint
-
-from opencv_utility import OpenCVOutlierFilteringFlag
+from .visualizer import DrawMatchFlags, MatchingVisualizer
 
 __all__ = [
     "KPMatchMethod",
@@ -36,7 +33,6 @@ __all__ = [
     ## FLANN parameters
     "FLANNParameters",
     "FLANNIndexType",
-    
     # external modules
-    "OpenCVOutlierFilteringFlag"
-    ]
+    "OpenCVOutlierFilteringFlag",
+]

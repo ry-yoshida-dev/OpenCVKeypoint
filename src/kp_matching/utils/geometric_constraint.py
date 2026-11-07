@@ -1,22 +1,23 @@
-
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable
 
 import cv2
 import numpy as np
 from opencv_utility import OpenCVOutlierFilteringFlag
 
+
 class GeometricConstraint(Enum):
     """
     Geometric constraint.
 
-    Attributes:
+    Attributes
     ----------
     FUNDAMENTAL: Fundamental matrix constraint for non-planar (3D) scenes.
     HOMOGRAPHY: Homography constraint for planar(2D) scenes.
     """
+
     FUNDAMENTAL = "fundamental"
     HOMOGRAPHY = "homography"
 
@@ -25,8 +26,8 @@ class GeometricConstraint(Enum):
         """
         OpenCV estimator function associated with this geometric constraint.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Callable[..., tuple[np.ndarray | None, np.ndarray | None]]:
             OpenCV estimator function.
         """
@@ -40,13 +41,13 @@ class GeometricConstraint(Enum):
         """
         CV2 flag for each estimator.
 
-        Parameters:
+        Parameters
         ----------
         outlier_filtering_flag: OpenCVOutlierFilteringFlag
             Outlier filtering flag.
 
-        Returns:
-        ----------
+        Returns
+        -------
         int:
             CV2 flag.
         """
@@ -66,7 +67,7 @@ class GeometricConstraint(Enum):
         """
         Estimate inlier/outlier mask for matched points.
 
-        Parameters:
+        Parameters
         ----------
         query_matched_coordinates: np.ndarray
             Query matched coordinates.
@@ -77,8 +78,8 @@ class GeometricConstraint(Enum):
         outlier_th: float
             Outlier threshold.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray | None:
             Inlier/outlier mask with shape ``(n, 1)`` (0: outlier, 1: inlier).
         """
@@ -98,4 +99,3 @@ class GeometricConstraint(Enum):
                     ransacReprojThreshold=outlier_th,
                 )
         return mask
-

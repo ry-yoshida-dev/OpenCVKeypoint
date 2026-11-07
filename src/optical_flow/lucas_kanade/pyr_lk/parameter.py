@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
-from dataclasses import dataclass
+from typing_extensions import override
 
 from ..parameter import LucasKanadeParameters
 from ..protocol import LucasKanadeFlowFunction
@@ -12,6 +14,7 @@ from ..protocol import LucasKanadeFlowFunction
 class PyrLKParameters(LucasKanadeParameters):
     """Parameters for ``cv2.calcOpticalFlowPyrLK`` sparse flow."""
 
+    @override
     def get_flow_func(self) -> LucasKanadeFlowFunction:
         """
         Return the PyrLK sparse flow function.

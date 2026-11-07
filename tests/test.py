@@ -8,14 +8,13 @@ import numpy as np
 
 from kp_detection import KPDetectionMethod
 from kp_detection.results import ArrayKPDetectionResult
-
 from kp_matching import (
-    KPMatchMethod,
+    FLANNParameters,
+    KPMatchCommonParameters,
     KPMatchingParameters,
     KPMatchingProcessor,
-    KPMatchCommonParameters,
+    KPMatchMethod,
     RatioTestParameters,
-    FLANNParameters,
 )
 
 
@@ -24,7 +23,9 @@ def _random_descriptors(
 ) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
     q = rng.standard_normal((n, dim), dtype=np.float64).astype(np.float32)
-    g = gallery_scale * rng.standard_normal((n, dim), dtype=np.float64).astype(np.float32)
+    g = gallery_scale * rng.standard_normal((n, dim), dtype=np.float64).astype(
+        np.float32
+    )
     return q, g
 
 
@@ -110,10 +111,10 @@ class TestKPMatchingRandomDescriptors(unittest.TestCase):
         )
         full, _ = _random_detection(5, 32, seed=4)
         with self.assertRaises(ValueError):
-            proc.run_pipeline(empty, full)
+            _ = proc.run_pipeline(empty, full)
         with self.assertRaises(ValueError):
-            proc.run_pipeline(full, empty)
+            _ = proc.run_pipeline(full, empty)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

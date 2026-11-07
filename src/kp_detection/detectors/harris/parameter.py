@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 import cv2
 import numpy as np
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from .detector import HarrisDetector
@@ -18,7 +21,7 @@ class HarrisParameters(KPDetectionParameters):
     """
     Parameters for Harris keypoint detection (base fields plus detector-specific options).
 
-    Attributes:
+    Attributes
     ----------
     block_size: int
         Neighborhood size for corner detection.
@@ -34,6 +37,7 @@ class HarrisParameters(KPDetectionParameters):
         Only pixels with a response higher than (corner_th * max_response) are retained.
         Larger values filter out weaker corners.
     """
+
     method: KPDetectionMethod = KPDetectionMethod.HARRIS
     block_size: int = 2
     ksize: int = 3
@@ -44,7 +48,7 @@ class HarrisParameters(KPDetectionParameters):
         if self.method != KPDetectionMethod.HARRIS:
             warnings.warn(
                 f"method was {self.method!r}; using method=KPDetectionMethod.HARRIS "
-                "for HarrisParameters.",
+                + "for HarrisParameters.",
                 stacklevel=2,
             )
             self.method = KPDetectionMethod.HARRIS
@@ -65,8 +69,8 @@ class HarrisParameters(KPDetectionParameters):
         """
         Define the Harris function.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Callable[[np.ndarray], np.ndarray]
             Function mapping a single-channel ``(H, W)`` image to a float32
             corner response map of the same shape (output of ``cv2.cornerHarris``).
@@ -78,14 +82,16 @@ class HarrisParameters(KPDetectionParameters):
             k=self.k,
         )
 
+    @override
     def build_detector(self) -> HarrisDetector:
         """
         Build a Harris detector instance based on the parameters.
 
-        Returns:
-        ----------
+        Returns
+        -------
         HarrisDetector:
             Harris detector instance.
         """
         from .detector import HarrisDetector
+
         return HarrisDetector(params=self)

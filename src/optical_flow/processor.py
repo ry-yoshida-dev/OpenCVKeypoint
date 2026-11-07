@@ -6,6 +6,7 @@ from typing import Generic, TypeVar
 
 import cv2
 import numpy as np
+from typing_extensions import override
 
 from .method import OpticalFlowMethod
 from .parameter import OpticalFlowParameters
@@ -22,11 +23,12 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
     Type parameter ParamsT is the concrete parameters dataclass for this processor.
     Type parameter ResultT is the return type of run().
 
-    Attributes:
+    Attributes
     ----------
     params: ParamsT
         Parameters for this optical flow processor.
     """
+
     params: ParamsT
 
     @property
@@ -35,8 +37,8 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
         """
         Return the optical flow method enum for this processor.
 
-        Returns:
-        ----------
+        Returns
+        -------
         OpticalFlowMethod
             The optical flow method.
         """
@@ -64,7 +66,7 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
         if new_width <= 0 or new_height <= 0:
             raise ValueError(
                 f"scale_factor={self.params.scale_factor} produces invalid size "
-                f"({new_height}, {new_width}) from input shape {image.shape}"
+                + f"({new_height}, {new_width}) from input shape {image.shape}"
             )
 
         return cv2.resize(
@@ -99,10 +101,12 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
         if new_width <= 0 or new_height <= 0:
             raise ValueError(
                 f"scale_factor={self.params.scale_factor} produces invalid mask size "
-                f"({new_height}, {new_width}) from input shape {mask.shape}"
+                + f"({new_height}, {new_width}) from input shape {mask.shape}"
             )
 
-        return cv2.resize(mask, (new_width, new_height), interpolation=cv2.INTER_NEAREST)
+        return cv2.resize(
+            mask, (new_width, new_height), interpolation=cv2.INTER_NEAREST
+        )
 
     def preprocess_image(self, image: np.ndarray) -> np.ndarray:
         """
@@ -180,12 +184,13 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
         """
 
     @abstractmethod
+    @override
     def __str__(self) -> str:
         """
         Return a string representation of the processor.
 
-        Returns:
-        ----------
+        Returns
+        -------
         str
             The string representation of the processor.
         """

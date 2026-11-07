@@ -10,16 +10,17 @@ authors = [
 ]
 description = "Unified Python interface for keypoint detection, matching, and optical flow using OpenCV-backed algorithms."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 dependencies = [
-  "numpy",
+  "numpy>=2.3",
   "opencv-contrib-python>=5.0",
   "opencv-utility @ git+https://github.com/ry-yoshida-dev/OpenCVUtility.git",
+  "typing-extensions>=4.12",
 ]
 
 [project.urls]
@@ -34,9 +35,42 @@ kp_detection = ["py.typed"]
 kp_matching = ["py.typed"]
 optical_flow = ["py.typed"]
 
+[tool.mypy]
+files = ["src", "tests"]
+strict = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test.py", "test_*.py", "*_test.py"]
+filterwarnings = ["error"]
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.40.2",
+    "mypy>=2.4.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.3",
+]
 
 [tool.uv]
 exclude-newer = "7 days"
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "D"]
+# Only public classes, methods, and functions need docstrings, and multi-line ones are the local style.
+ignore = ["E501", "D100", "D104", "D105", "D200"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+
+[tool.basedpyright]
+# KPDetectionMethod and OpticalFlowMethod map each member to its implementation
+# class through deferred imports, which pyright reports as cycles. Breaking them
+# needs a redesign of that public API.
+reportImportCycles = false

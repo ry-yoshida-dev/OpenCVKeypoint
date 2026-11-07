@@ -1,40 +1,45 @@
-import numpy as np
 import cv2
+import numpy as np
+from typing_extensions import override
+
 from ..detector import KeyPointDetector
 from ..parameter import KPDetectionParameters
 from ..results import KPDetectionResult
 
 
-class SimpleBlobDetector(KeyPointDetector[cv2.SimpleBlobDetector, None, KPDetectionResult, KPDetectionParameters]):
+class SimpleBlobDetector(
+    KeyPointDetector[
+        cv2.SimpleBlobDetector, None, KPDetectionResult, KPDetectionParameters
+    ]
+):
     """
     SimpleBlob detector.
 
-    Attributes:
+    Attributes
     ----------
     detector: cv2.SimpleBlobDetector
     """
 
+    @override
     def _define_detector(self) -> tuple[cv2.SimpleBlobDetector, None]:
         """
         Define the detector.
 
-        Returns:
-        ----------
+        Returns
+        -------
         tuple[cv2.SimpleBlobDetector, None]
             The detector and None (no extractor).
         """
-        detector = cv2.SimpleBlobDetector_create() # type: ignore
-        return detector, None # type: ignore
+        return cv2.SimpleBlobDetector.create(), None
 
+    @override
     def detect(
-        self,
-        img: np.ndarray,
-        mask: np.ndarray | None = None
-        ) -> KPDetectionResult:
+        self, img: np.ndarray, mask: np.ndarray | None = None
+    ) -> KPDetectionResult:
         """
         Detect keypoints in an image.
 
-        Parameters:
+        Parameters
         ----------
         img: np.ndarray
             Input image ``(H, W)`` or ``(H, W, C)`` as accepted by OpenCV.
@@ -42,8 +47,8 @@ class SimpleBlobDetector(KeyPointDetector[cv2.SimpleBlobDetector, None, KPDetect
             Boolean mask (0 = ignore, 1 = include).
             Ignored by this detector; a ``UserWarning`` is emitted when it is not ``None``.
 
-        Returns:
-        ----------
+        Returns
+        -------
         KPDetectionResult
             The result of keypoint detection.
         """
@@ -59,5 +64,6 @@ class SimpleBlobDetector(KeyPointDetector[cv2.SimpleBlobDetector, None, KPDetect
         self._remap_result_to_original_coordinates(result)
         return result
 
+    @override
     def __str__(self) -> str:
         return f"SimpleBlobDetector(method={self.params.method})"

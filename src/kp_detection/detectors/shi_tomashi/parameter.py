@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 import cv2
 import numpy as np
-from typing import TYPE_CHECKING, Callable
-from dataclasses import dataclass
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from .detector import ShiTomashiDetector
@@ -18,7 +21,7 @@ class ShiTomashiParameters(KPDetectionParameters):
     """
     Parameters for Shi–Tomasi keypoint detection (base fields plus detector-specific options).
 
-    Attributes:
+    Attributes
     ----------
     max_corners: int
         Maximum number of corners to return.
@@ -39,6 +42,7 @@ class ShiTomashiParameters(KPDetectionParameters):
         When increased: Harris detector becomes more selective (fewer corners detected).
         If useHarrisDetector is False, this parameter is not used.
     """
+
     method: KPDetectionMethod = KPDetectionMethod.SHI_TOMASHI
     max_corners: int = 1000
     quality_level: float = 0.01
@@ -51,7 +55,7 @@ class ShiTomashiParameters(KPDetectionParameters):
         if self.method != KPDetectionMethod.SHI_TOMASHI:
             warnings.warn(
                 f"method was {self.method!r}; using method=KPDetectionMethod.SHI_TOMASHI "
-                "for ShiTomashiParameters.",
+                + "for ShiTomashiParameters.",
                 stacklevel=2,
             )
             self.method = KPDetectionMethod.SHI_TOMASHI
@@ -74,30 +78,38 @@ class ShiTomashiParameters(KPDetectionParameters):
         """
         Define the ShiTomashi function.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Callable[[np.ndarray, np.ndarray | None], np.ndarray]
             (image, mask) -> corners from cv2.goodFeaturesToTrack. Pass mask=None for the full image.
         """
-        return lambda img, mask=None: cv2.goodFeaturesToTrack(
-            image=img,
-            maxCorners=self.max_corners,
-            qualityLevel=self.quality_level,
-            minDistance=self.min_distance,
-            mask=mask,
-            blockSize=self.blocksize,
-            useHarrisDetector=self.useHarrisDetector,
-            k=self.k,
-        )
 
+        def detect_corners(
+            img: np.ndarray, mask: np.ndarray | None = None
+        ) -> np.ndarray:
+            return cv2.goodFeaturesToTrack(
+                image=img,
+                maxCorners=self.max_corners,
+                qualityLevel=self.quality_level,
+                minDistance=self.min_distance,
+                mask=mask,
+                blockSize=self.blocksize,
+                useHarrisDetector=self.useHarrisDetector,
+                k=self.k,
+            )
+
+        return detect_corners
+
+    @override
     def build_detector(self) -> ShiTomashiDetector:
         """
         Build a Shi–Tomasi detector instance based on the parameters.
 
-        Returns:
-        ----------
+        Returns
+        -------
         ShiTomashiDetector:
             Shi–Tomasi detector instance.
         """
         from .detector import ShiTomashiDetector
+
         return ShiTomashiDetector(params=self)

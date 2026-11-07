@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeAlias
 
-from ..result import KPT, KPElem, KeyPointDetectionResult, KPDetectionStep
+from ..result import KPT, KeyPointDetectionResult, KPDetectionStep, KPElem
 from .array import ArrayKPDetectionResult
 from .cv2_keypoint import KPDetectionResult
 

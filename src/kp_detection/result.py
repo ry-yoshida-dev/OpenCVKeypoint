@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import numpy as np
-
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Generic, Iterator, TypeVar
+from typing import Generic, TypeAlias, TypeVar
 
+import numpy as np
+from typing_extensions import override
 
 from .method import KPDetectionMethod
 
 KPT = TypeVar("KPT", covariant=True)
 KPElem = TypeVar("KPElem", covariant=True)
+_StepElem = TypeVar("_StepElem")
 
-type KPDetectionStep[T] = tuple[T, np.ndarray | None]
+KPDetectionStep: TypeAlias = tuple[_StepElem, np.ndarray | None]
 
 
 @dataclass
@@ -22,7 +24,7 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
 
     Subclasses set KPT (batch storage) and KPElem (one element from that batch).
 
-    Attributes:
+    Attributes
     ----------
     method: KPDetectionMethod
         The detection method that produced this result.
@@ -40,8 +42,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Validate that keypoints and descriptors have compatible lengths.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If descriptors are present and non-empty but their row count does not
             match the number of keypoints.
@@ -54,10 +56,10 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
     @abstractmethod
     def __len__(self) -> int:
         """
-        Number of keypoints in this result.
+        Return the number of keypoints in this result.
 
-        Returns:
-        ----------
+        Returns
+        -------
         int:
             The count of keypoints.
         """
@@ -67,13 +69,13 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Return the keypoint and descriptor at the given index.
 
-        Parameters:
+        Parameters
         ----------
         index: int
             Zero-based index into the keypoint sequence.
 
-        Returns:
-        ----------
+        Returns
+        -------
         KPDetectionStep[KPElem]:
             (keypoint, descriptor_row_or_none); same shape as each step from
             __iter__.
@@ -87,8 +89,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         __getitem__ is expensive per index should override this for linear-time
         iteration.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Iterator[KPDetectionStep[KPElem]]:
             Yields the same pairs as repeated __getitem__ calls in order.
         """
@@ -96,12 +98,13 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
             yield self[i]
 
     @abstractmethod
+    @override
     def __str__(self) -> str:
         """
         Short human-readable summary (counts / array shapes).
 
-        Returns:
-        ----------
+        Returns
+        -------
         str:
             String representation for logging or display.
         """
@@ -112,8 +115,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         X coordinates for each keypoint (1-D array with shape ``(N,)``).
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             One value per keypoint, aligned with iteration order.
         """
@@ -124,8 +127,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Y coordinates for each keypoint (1-D array with shape ``(N,)``).
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             One value per keypoint, aligned with iteration order.
         """
@@ -136,8 +139,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Stacked (x, y) pairs for all keypoints.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Shape ``(N, 2)`` (or subclass-equivalent layout).
         """
@@ -148,8 +151,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Orientation per keypoint (degrees), or placeholders when unknown.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             1-D array with shape ``(N,)``.
         """
@@ -160,8 +163,8 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Feature scale / diameter per keypoint, or placeholders when unknown.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             1-D array with shape ``(N,)``.
         """
@@ -171,15 +174,15 @@ class KeyPointDetectionResult(Generic[KPT, KPElem], ABC):
         """
         Scale keypoint positions (and feature sizes where applicable) in place.
 
-        Parameters:
+        Parameters
         ----------
         factor: float
             Multiplier applied to each (x, y) and to feature size when present.
             Use ``1.0 / detection_scale_factor`` to map coordinates from a
             downscaled working image back to the original image space.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If factor is not positive.
         """

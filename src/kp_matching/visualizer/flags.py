@@ -1,11 +1,13 @@
-import cv2
 from enum import Enum
+
+import cv2
+
 
 class DrawMatchFlags(Enum):
     """
     Draw match flags.
 
-    Attributes:
+    Attributes
     ----------
     DEFAULT: int
         The default draw match flags.
@@ -16,6 +18,7 @@ class DrawMatchFlags(Enum):
     DRAW_RICH_KEYPOINTS: int
         The draw rich keypoints draw match flags.
     """
+
     DEFAULT = "default"
     DRAW_OVER_OUTIMG = "draw_over_outimg"
     NOT_DRAW_SINGLE_POINTS = "not_draw_single_points"
@@ -26,8 +29,8 @@ class DrawMatchFlags(Enum):
         """
         Convert the draw match flags to cv2 draw match flags.
 
-        Returns:
-        ----------
+        Returns
+        -------
         int
             The cv2 draw match flags.
         """

@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import cv2
 import numpy as np
@@ -14,12 +14,13 @@ from .method import KPDetectionMethod
 if TYPE_CHECKING:
     from .type_alias import KPDetector
 
+
 @dataclass
 class KPDetectionParameters:
     """
     Base parameters for keypoint detection (subclasses add method-specific fields).
 
-    Attributes:
+    Attributes
     ----------
     method: KPDetectionMethod
         The method for keypoint detection.
@@ -39,11 +40,12 @@ class KPDetectionParameters:
         otherwise ``cv2.resize`` with ``fx``/``fy`` = ``scale_factor`` and
         ``interpolation=cv2.INTER_NEAREST`` (preserves binary masks).
     """
+
     method: KPDetectionMethod = KPDetectionMethod.SIFT
     is_brief_applied: bool = False
     scale_factor: float = 1.0
     interpolation: OpenCVInterpolationFlag = OpenCVInterpolationFlag.LINEAR
-    brief: Any = field(init=False, default=None)
+    brief: cv2.Feature2D | None = field(init=False, default=None)
     image_scaler: Callable[[np.ndarray], np.ndarray] = field(init=False)
     mask_rescaler: Callable[[np.ndarray], np.ndarray] = field(init=False)
 
@@ -55,7 +57,7 @@ class KPDetectionParameters:
         self.image_scaler = self._build_image_scaler()
         self.mask_rescaler = self._build_mask_rescaler()
         if self.is_brief_applied:
-            self.brief = cv2.xfeatures2d.BriefDescriptorExtractor_create() # type: ignore
+            self.brief = cv2.xfeatures2d.BriefDescriptorExtractor.create()
 
     def _validate(self) -> None:
         """
@@ -69,9 +71,10 @@ class KPDetectionParameters:
             )
             warnings.warn(
                 "BRIEF descriptor extractor is not supported for "
-                f"{self.method.value}. is_brief_applied is set to False.\n"
-                "BRIEF is supported for:\n"
-                f"{brief_methods}"
+                + f"{self.method.value}. is_brief_applied is set to False.\n"
+                + "BRIEF is supported for:\n"
+                + f"{brief_methods}",
+                stacklevel=2,
             )
             self.is_brief_applied = False
 
@@ -124,17 +127,15 @@ class KPDetectionParameters:
         Calling this on base KPDetectionParameters with those methods raises ValueError.
         Other methods use this class as-is.
 
-        Returns:
-        ----------
+        Returns
+        -------
         KPDetector
             Detector instance for methods handled by KPDetectionParameters.
             Shi-Tomasi and Harris are built from ShiTomashiParameters and HarrisParameters.
         """
-
         if self.method in [KPDetectionMethod.SHI_TOMASHI, KPDetectionMethod.HARRIS]:
-            raise ValueError(f"Invalid method: {self.method}, Shi-Tomasi and Harris are built from ShiTomashiParameters and HarrisParameters.")
+            raise ValueError(
+                f"Invalid method: {self.method}, Shi-Tomasi and Harris are built from ShiTomashiParameters and HarrisParameters."
+            )
         detector_class = self.method.detector_class
         return detector_class(params=self)
-    
-
-

@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class RatioTestParameters:
     """
     Parameters for ratio test.
 
-    Attributes:
+    Attributes
     ----------
     is_enabled: bool
         Whether to use ratio test.
@@ -14,6 +15,7 @@ class RatioTestParameters:
         - Closer to 0.0: Stricter (fewer, higher quality matches).
         - Closer to 1.0: Looser (more matches, including potential false positives).
     """
+
     is_enabled: bool = True
     threshold: float = 0.75
 
@@ -21,8 +23,8 @@ class RatioTestParameters:
         """
         Post-initialization validation.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If the threshold is not a float strictly between 0 and 1.
         """

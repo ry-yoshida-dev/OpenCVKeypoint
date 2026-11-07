@@ -1,4 +1,5 @@
-numpy
+numpy>=2.3
 pytest
 opencv-contrib-python>=5.0
 opencv-utility @ git+https://github.com/ry-yoshida-dev/OpenCVUtility.git
+typing-extensions>=4.12

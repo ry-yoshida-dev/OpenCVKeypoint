@@ -1,5 +1,3 @@
 from .geometric_constraint import GeometricConstraint
 
-__all__ = [
-    "GeometricConstraint"
-]
+__all__ = ["GeometricConstraint"]

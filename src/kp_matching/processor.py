@@ -1,9 +1,13 @@
+from collections.abc import Callable, Sequence
+
+import cv2
 import numpy as np
 
-from .paired_detection_result import PairedDetectionResult
-from .match_container import MatchResult
-from .parameter import KPMatchingParameters
 from kp_detection import DetectionResultUnion
+
+from .match_container import MatchResult
+from .paired_detection_result import PairedDetectionResult
+from .parameter import KPMatchingParameters
 
 
 class KPMatchingProcessor:
@@ -13,84 +17,83 @@ class KPMatchingProcessor:
     FLANN-based, and k-Nearest Neighbors (kNN) matchers. It supports applying Lowe's
     ratio test to filter good matches based on a threshold.
 
-    Attributes:
+    Attributes
     ----------
     params: KPMatchingParameters
         The parameters for the keypoint matching processor.
-    function: Callable[[np.ndarray, np.ndarray], list[cv2.DMatch]]
+    function: Callable[[np.ndarray, np.ndarray], Sequence[cv2.DMatch] | Sequence[Sequence[cv2.DMatch]]]
         The function for matching descriptors.
     """
-    def __init__(
-        self,
-        params: KPMatchingParameters
-        ) -> None:
+
+    def __init__(self, params: KPMatchingParameters) -> None:
         """
         Initialize the KPMatchingProcessor.
 
-        Parameters:
+        Parameters
         ----------
         params: KPMatchingParameters
             The parameters for the keypoint matching processor.
         """
-        self.params = params
-        self.function = self.params.define_matching_function()
+        self.params: KPMatchingParameters = params
+        self.function: Callable[
+            [np.ndarray, np.ndarray],
+            Sequence[cv2.DMatch] | Sequence[Sequence[cv2.DMatch]],
+        ] = self.params.define_matching_function()
 
-    def match(
-        self,
-        desc1: np.ndarray,
-        desc2: np.ndarray
-        ) -> MatchResult:
+    def match(self, desc1: np.ndarray, desc2: np.ndarray) -> MatchResult:
         """
-        Performs keypoint matching based on the specified method.
+        Perform keypoint matching based on the specified method.
+
         This method matches descriptors from two sets using the chosen matching technique.
 
-        Parameters:
+        Parameters
         ----------
         desc1: np.ndarray
             Descriptors of keypoints in the first image.
         desc2: np.ndarray
             Descriptors of keypoints in the second image.
 
-        Returns:
-        ---------
+        Returns
+        -------
         MatchResult: A sorted list of matches based on their distance.
 
-        Raises:
-        --------
+        Raises
+        ------
         ValueError: If an unsupported matching method is specified.
         """
-
-        matches = MatchResult(matches=self.function(desc1, desc2)) # type: ignore
+        matches = MatchResult(matches=self.function(desc1, desc2))
 
         if self.params.is_ratio_test_enabled:
-            matches = matches.apply_ratio_test(threshold=self.params.ratio_test_threshold)
+            matches = matches.apply_ratio_test(
+                threshold=self.params.ratio_test_threshold
+            )
         return matches
 
     def run_pipeline(
         self,
         query_det_result: DetectionResultUnion,
         gallery_det_result: DetectionResultUnion,
-        ) -> PairedDetectionResult:
+    ) -> PairedDetectionResult:
         """
         Match keypoints from two detection results and wrap the outcome in a PairedDetectionResult.
 
         Descriptors are read from each detection result; coordinates and matches stay aligned
         with the original keypoint indices.
 
-        Parameters:
+        Parameters
         ----------
         query_det_result: DetectionResultUnion
             Detection result for the query image (must include descriptors).
         gallery_det_result: DetectionResultUnion
             Detection result for the gallery image (must include descriptors).
 
-        Returns:
-        --------
+        Returns
+        -------
         PairedDetectionResult:
             Query and gallery detections plus the ``MatchResult`` from this processor.
 
-        Raises:
-        --------
+        Raises
+        ------
         ValueError: If either detection result has no descriptors.
         """
         query_descriptors = query_det_result.descriptors
@@ -103,6 +106,5 @@ class KPMatchingProcessor:
         return PairedDetectionResult(
             query_det_result=query_det_result,
             gallery_det_result=gallery_det_result,
-            match_result=matches
+            match_result=matches,
         )
-

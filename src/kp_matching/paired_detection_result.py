@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import cv2
 import warnings
-import numpy as np
 from dataclasses import dataclass
-from typing import cast
 
+import numpy as np
 from opencv_utility import OpenCVOutlierFilteringFlag
-from .match_container import KNNMatchGroup, MatchResult
-from .utils import GeometricConstraint
+from typing_extensions import override
+
 from kp_detection import DetectionResultUnion
+
+from .match_container import MatchResult
+from .utils import GeometricConstraint
 
 
 @dataclass
@@ -17,7 +18,7 @@ class PairedDetectionResult:
     """
     Container for keypoint matching result, including query and gallery keypoint detection results and match result.
 
-    Attributes:
+    Attributes
     ----------
     query_det_result: DetectionResultUnion
         The query keypoint detection result.
@@ -26,6 +27,7 @@ class PairedDetectionResult:
     match_result: MatchResult
         The match result.
     """
+
     query_det_result: DetectionResultUnion
     gallery_det_result: DetectionResultUnion
     match_result: MatchResult
@@ -35,7 +37,7 @@ class PairedDetectionResult:
         """
         The query matched coordinates.
 
-        Returns:
+        Returns
         -------
         np.ndarray:
             The query matched coordinates with shape ``(n, 2)``.
@@ -43,13 +45,13 @@ class PairedDetectionResult:
         query_keypoints = self.query_det_result.coordinates
         match_indices = [match.queryIdx for match in self.match_result]
         return query_keypoints[match_indices]
-    
+
     @property
     def gallery_matched_coordinates(self) -> np.ndarray:
         """
         The gallery matched coordinates.
 
-        Returns:
+        Returns
         -------
         np.ndarray:
             The gallery matched coordinates with shape ``(n, 2)``.
@@ -63,39 +65,49 @@ class PairedDetectionResult:
         """
         The query descriptors.
 
-        Returns:
+        Returns
         -------
         np.ndarray:
             The query descriptors.
         """
         if self.query_det_result.descriptors is None:
             raise ValueError("Query keypoint detection result has no descriptors.")
-        return np.array([self.query_det_result.descriptors[match.queryIdx] for match in self.match_result])
+        return np.array(
+            [
+                self.query_det_result.descriptors[match.queryIdx]
+                for match in self.match_result
+            ]
+        )
 
     @property
-    def gallery_descriptors(self):
+    def gallery_descriptors(self) -> np.ndarray:
         """
         The gallery descriptors.
 
-        Returns:
+        Returns
         -------
         np.ndarray:
             The gallery descriptors.
         """
         if self.gallery_det_result.descriptors is None:
-                raise ValueError("Gallery descriptors are not available.")
-        return np.array([self.gallery_det_result.descriptors[match.trainIdx] for match in self.match_result])
+            raise ValueError("Gallery descriptors are not available.")
+        return np.array(
+            [
+                self.gallery_det_result.descriptors[match.trainIdx]
+                for match in self.match_result
+            ]
+        )
 
     def filter_outliers(
-        self, 
+        self,
         outlier_th: float = 3.0,
         outlier_filtering_flag: OpenCVOutlierFilteringFlag = OpenCVOutlierFilteringFlag.MAGSAC,
         geometric_constraint: GeometricConstraint = GeometricConstraint.FUNDAMENTAL,
-        ) -> PairedDetectionResult:
+    ) -> PairedDetectionResult:
         """
         Filter outliers from the matches.
 
-        Parameters:
+        Parameters
         ----------
         outlier_th: float
             Outlier threshold.
@@ -104,10 +116,10 @@ class PairedDetectionResult:
         geometric_constraint: GeometricConstraint
             Geometric model used for outlier filtering.
 
-        Returns:
-        ----------
+        Returns
+        -------
         PairedDetectionResult: Filtered matches by outlier filtering process.
-        """        
+        """
         mask = geometric_constraint.estimate_mask(
             query_matched_coordinates=self.query_matched_coordinates,
             gallery_matched_coordinates=self.gallery_matched_coordinates,
@@ -118,19 +130,20 @@ class PairedDetectionResult:
         if mask is None or mask.size == 0:
             warnings.warn(
                 f"Outlier filtering failed with {geometric_constraint.value} constraint. "
-                "Returning the original matches."
+                + "Returning the original matches.",
+                stacklevel=2,
             )
             return self
         inlier_indices: list[int] = [int(i) for i in np.flatnonzero(mask.ravel() == 1)]
         raw_matches = self.match_result.matches
         filtered = [raw_matches[i] for i in inlier_indices]
-        homogenous_matches = cast(list[cv2.DMatch] | list[KNNMatchGroup], filtered)
         return self.__class__(
             query_det_result=self.query_det_result,
             gallery_det_result=self.gallery_det_result,
-            match_result=MatchResult(matches=homogenous_matches),
+            match_result=MatchResult(matches=filtered),
         )
 
+    @override
     def __str__(self) -> str:
         return f"PairedDetectionResult(query_det_result={self.query_det_result}, \
         gallery_det_result={self.gallery_det_result}, \

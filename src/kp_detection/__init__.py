@@ -1,17 +1,16 @@
-
-from .type_alias import KPDetector
+from .detectors import (
+    HarrisParameters,
+    ShiTomashiParameters,
+)
+from .method import KPDetectionMethod
 from .parameter import KPDetectionParameters
 from .results import (
     ArrayKPDetectionResult,
     DetectionResultUnion,
-    KPDetectionResult,
     KeyPointDetectionResult,
+    KPDetectionResult,
 )
-from .detectors import (
-    HarrisParameters,
-    ShiTomashiParameters,
-    )
-from .method import KPDetectionMethod
+from .type_alias import KPDetector
 
 __all__ = [
     "KPDetector",
@@ -23,4 +22,4 @@ __all__ = [
     "KPDetectionMethod",
     "HarrisParameters",
     "ShiTomashiParameters",
-    ]
+]

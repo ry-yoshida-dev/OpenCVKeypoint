@@ -11,13 +11,14 @@ class OpticalFlowParameters:
     """
     Base parameters shared by all optical flow processors.
 
-    Attributes:
+    Attributes
     ----------
     scale_factor: float
         Image scale multiplier applied before optical flow computation.
     interpolation: OpenCVInterpolationFlag
         OpenCV interpolation flag used when scaling images and restoring flow fields.
     """
+
     scale_factor: float = 1.0
     interpolation: OpenCVInterpolationFlag = OpenCVInterpolationFlag.LINEAR
 

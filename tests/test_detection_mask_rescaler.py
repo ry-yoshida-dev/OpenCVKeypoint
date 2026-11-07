@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import unittest
-import warnings
 
 import numpy as np
 
 from kp_detection import KPDetectionMethod
-from kp_detection.parameter import KPDetectionParameters
 from kp_detection.detectors.agast import AGASTDetector
-from kp_detection.detectors.mser import MSERDetector
-from kp_detection.detectors.simple_blob import SimpleBlobDetector
-from kp_detection.detectors.shi_tomashi.parameter import ShiTomashiParameters
 from kp_detection.detectors.harris.parameter import HarrisParameters
+from kp_detection.detectors.mser import MSERDetector
+from kp_detection.detectors.shi_tomashi.parameter import ShiTomashiParameters
+from kp_detection.detectors.simple_blob import SimpleBlobDetector
+from kp_detection.parameter import KPDetectionParameters
 
 
 class TestMaskRescaler(unittest.TestCase):
@@ -55,7 +54,7 @@ class TestUnusedMaskWarning(unittest.TestCase):
         img = np.zeros((32, 32, 3), dtype=np.uint8)
         mask = np.ones((32, 32), dtype=np.uint8)
         with self.assertWarns(UserWarning):
-            detector.detect(img, mask=mask)
+            _ = detector.detect(img, mask=mask)
 
     def test_mser_warns_when_mask_provided(self) -> None:
         params = KPDetectionParameters(method=KPDetectionMethod.MSER)
@@ -63,7 +62,7 @@ class TestUnusedMaskWarning(unittest.TestCase):
         img = np.zeros((64, 64, 3), dtype=np.uint8)
         mask = np.ones((64, 64), dtype=np.uint8)
         with self.assertWarns(UserWarning):
-            detector.detect(img, mask=mask)
+            _ = detector.detect(img, mask=mask)
 
     def test_simple_blob_warns_when_mask_provided(self) -> None:
         params = KPDetectionParameters(method=KPDetectionMethod.SIMPLE_BLOB)
@@ -71,8 +70,8 @@ class TestUnusedMaskWarning(unittest.TestCase):
         img = np.zeros((32, 32, 3), dtype=np.uint8)
         mask = np.ones((32, 32), dtype=np.uint8)
         with self.assertWarns(UserWarning):
-            detector.detect(img, mask=mask)
+            _ = detector.detect(img, mask=mask)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

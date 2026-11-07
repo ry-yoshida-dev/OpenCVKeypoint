@@ -1,10 +1,11 @@
 from enum import IntEnum
 
+
 class FLANNIndexType(IntEnum):
     """
     FLANN index type.
 
-    Attributes:
+    Attributes
     ----------
     LINEAR: int
         The linear index type.
@@ -25,12 +26,13 @@ class FLANNIndexType(IntEnum):
     AUTOTUNED: int
         The autotuned index type.
     """
-    LINEAR              = 0
-    KDTREE              = 1
-    KMEANS              = 2
-    COMPOSITE           = 3
-    KDTREE_SINGLE       = 4
-    HIERARCHICAL        = 5
-    LSH                 = 6 # For binary descriptors
-    SAVED               = 7
-    AUTOTUNED           = 8
+
+    LINEAR = 0
+    KDTREE = 1
+    KMEANS = 2
+    COMPOSITE = 3
+    KDTREE_SINGLE = 4
+    HIERARCHICAL = 5
+    LSH = 6  # For binary descriptors
+    SAVED = 7
+    AUTOTUNED = 8

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import cv2
 import numpy as np
-from dataclasses import dataclass
 
 from ..parameter import OpticalFlowParameters
 
@@ -12,12 +13,13 @@ class FarnebackResult:
     """
     Result container for dense Farneback optical flow (``cv2.calcOpticalFlowFarneback``).
 
-    Attributes:
+    Attributes
     ----------
     flow: np.ndarray
         Dense flow field with shape ``(H, W, 2)`` containing ``[dx, dy]`` displacements
         computed on the preprocessed (rescaled) image.
     """
+
     flow: np.ndarray
 
     def scale(

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Iterator
+
+import numpy as np
+from typing_extensions import override
 
 from ..result import KeyPointDetectionResult, KPDetectionStep
 
@@ -16,7 +18,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
     Orientation and patch size are not represented; angles and sizes are filled
     with -1.0.
 
-    Attributes:
+    Attributes
     ----------
     method: KPDetectionMethod
         The detection method that produced this result (from the base class).
@@ -28,12 +30,13 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
 
     keypoints: np.ndarray
 
+    @override
     def __len__(self) -> int:
         """
-        Number of keypoints (rows in the coordinate array).
+        Return the number of keypoints (rows in the coordinate array).
 
-        Returns:
-        ----------
+        Returns
+        -------
         int:
             Zero when the array is empty; otherwise the leading dimension size.
         """
@@ -41,17 +44,18 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
             return 0
         return int(self.keypoints.shape[0])
 
+    @override
     def __getitem__(self, index: int) -> KPDetectionStep[np.ndarray]:
         """
         Return the coordinate row and optional descriptor at index.
 
-        Parameters:
+        Parameters
         ----------
         index: int
             Zero-based index into the keypoint sequence.
 
-        Returns:
-        ----------
+        Returns
+        -------
         KPDetectionStep[np.ndarray]:
             (xy_row, descriptor_row_or_none); xy row has shape ``(2,)``.
         """
@@ -60,12 +64,13 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
             return (row, None)
         return (row, self.descriptors[index])
 
+    @override
     def __iter__(self) -> Iterator[KPDetectionStep[np.ndarray]]:
         """
         Iterate over (xy row, descriptor or None) pairs.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Iterator[KPDetectionStep[np.ndarray]]:
             Each keypoint is a length-2 coordinate vector; descriptor is None
             when absent or when descriptors are an empty array.
@@ -77,12 +82,13 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
             return iter((xy[i], self.descriptors[i]) for i in range(len(xy)))
         return iter((xy[i], None) for i in range(len(xy)))
 
+    @override
     def __str__(self) -> str:
         """
         Short summary with keypoints and descriptors shapes.
 
-        Returns:
-        ----------
+        Returns
+        -------
         str:
             String representation for logging or display.
         """
@@ -97,48 +103,52 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         )
 
     @property
+    @override
     def x(self) -> np.ndarray:
         """
         X coordinates as a 1-D float64 array (length N).
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Column 0 of the normalized ``(N, 2)`` coordinates.
         """
         return self._as_xy_pairs()[:, 0]
 
     @property
+    @override
     def y(self) -> np.ndarray:
         """
         Y coordinates as a 1-D float64 array (length N).
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Column 1 of the normalized ``(N, 2)`` coordinates.
         """
         return self._as_xy_pairs()[:, 1]
 
     @property
+    @override
     def coordinates(self) -> np.ndarray:
         """
         All keypoints as ``(N, 2)`` float64 with x and y columns.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Normalized coordinate array.
         """
         return self._as_xy_pairs()
 
     @property
+    @override
     def angles(self) -> np.ndarray:
         """
         Placeholder angles: array of -1.0 (no angle data for plain arrays).
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Shape ``(N,)``, dtype float64.
         """
@@ -146,30 +156,32 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         return np.full(n, -1.0, dtype=np.float64)
 
     @property
+    @override
     def sizes(self) -> np.ndarray:
         """
         Placeholder sizes: array of -1.0 (no scale data for plain arrays).
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray:
             Shape ``(N,)``, dtype float64.
         """
         n = len(self)
         return np.full(n, -1.0, dtype=np.float64)
 
+    @override
     def scale_coordinates(self, factor: float) -> None:
         """
         Scale stored coordinate rows in place.
 
-        Parameters:
+        Parameters
         ----------
         factor: float
             Multiplier for each (x, y) pair. Array layout ``(N, 2)`` or
             ``(N, 1, 2)`` is preserved.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If factor is not positive.
         """
@@ -190,13 +202,13 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         """
         Normalize self.keypoints to a float ``(N, 2)`` array.
 
-        Returns:
-        ----------
+        Returns
+        -------
         np.ndarray
             Float64 array with shape ``(N, 2)`` and x/y columns.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If keypoints is not ``(N, 2)`` or ``(N, 1, 2)``.
         """
@@ -211,6 +223,6 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         else:
             raise ValueError(
                 "keypoints must have shape (N, 2) or (N, 1, 2), "
-                f"got {tuple(coords.shape)}"
+                + f"got {tuple(coords.shape)}"
             )
         return coords

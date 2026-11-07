@@ -1,28 +1,47 @@
 from __future__ import annotations
 
+import warnings
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
+
 import cv2
 import numpy as np
-import warnings
-from dataclasses import dataclass, field
-from typing import Callable, Sequence
 
-
-from .parameters import (
-    KPMatchCommonParameters, 
-    RatioTestParameters, 
-    FLANNParameters,
-    FLANNIndexType,
-    )
 from .method import KPMatchMethod
+from .parameters import (
+    FLANNIndexType,
+    FLANNParameters,
+    KPMatchCommonParameters,
+    RatioTestParameters,
+)
 
 
 @dataclass
 class KPMatchingParameters:
+    """
+    Parameters for keypoint matching.
+
+    Attributes
+    ----------
+    common_params: KPMatchCommonParameters
+        Matching method, norm, and kNN settings.
+    ratio_test_params: RatioTestParameters
+        Lowe's ratio test settings.
+    flann_params: FLANNParameters
+        FLANN index settings, used by the FLANN method.
+
+    Raises
+    ------
+    ValueError
+        If the ratio test is enabled with kNN of 1, or FLANN is selected for a
+        detection method without descriptors.
+    """
+
     common_params: KPMatchCommonParameters
     ratio_test_params: RatioTestParameters = field(default_factory=RatioTestParameters)
     flann_params: FLANNParameters = field(default_factory=FLANNParameters)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.common_params.knn == 1 and self.ratio_test_params.is_enabled:
             raise ValueError("RatioTest requires kNN > 1")
         self._validate_flann_index_type()
@@ -31,8 +50,8 @@ class KPMatchingParameters:
         """
         Define the matcher based on the method.
 
-        Returns:
-        ----------
+        Returns
+        -------
         cv2.BFMatcher | cv2.FlannBasedMatcher
             The matcher.
         """
@@ -45,29 +64,35 @@ class KPMatchingParameters:
             case KPMatchMethod.FLANN:
                 return self.flann_params.define_matcher()
 
-    def define_matching_function(self) -> Callable[[np.ndarray, np.ndarray], Sequence[cv2.DMatch] | Sequence[Sequence[cv2.DMatch]]]:
+    def define_matching_function(
+        self,
+    ) -> Callable[
+        [np.ndarray, np.ndarray], Sequence[cv2.DMatch] | Sequence[Sequence[cv2.DMatch]]
+    ]:
         """
         Define the matching function based on the method.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Callable[[np.ndarray, np.ndarray], Sequence[cv2.DMatch] | Sequence[Sequence[cv2.DMatch]]]
             The matching function.
         """
         matcher = self.define_matcher()
         match self.common_params.method:
-            case KPMatchMethod.BF :
+            case KPMatchMethod.BF:
                 return lambda desc1, desc2: matcher.match(desc1, desc2)
             case KPMatchMethod.FLANN | KPMatchMethod.KNN:
-                return lambda desc1, desc2: matcher.knnMatch(desc1, desc2, k=self.common_params.knn)
+                return lambda desc1, desc2: matcher.knnMatch(
+                    desc1, desc2, k=self.common_params.knn
+                )
 
     @property
     def is_ratio_test_enabled(self) -> bool:
         """
         Whether the ratio test is enabled.
 
-        Returns:
-        ----------
+        Returns
+        -------
         bool
             Whether the ratio test is enabled.
         """
@@ -78,8 +103,8 @@ class KPMatchingParameters:
         """
         The threshold for the ratio test.
 
-        Returns:
-        ----------
+        Returns
+        -------
         float
             The threshold for the ratio test.
         """
@@ -92,8 +117,12 @@ class KPMatchingParameters:
         if self.common_params.method != KPMatchMethod.FLANN:
             return
 
-        is_binary_descriptor = self.common_params.detection_method.is_binary_descriptor_supported
-        is_float_descriptor = self.common_params.detection_method.is_float_descriptor_supported
+        is_binary_descriptor = (
+            self.common_params.detection_method.is_binary_descriptor_supported
+        )
+        is_float_descriptor = (
+            self.common_params.detection_method.is_float_descriptor_supported
+        )
         if not is_binary_descriptor and not is_float_descriptor:
             raise ValueError(
                 f"{self.common_params.detection_method.value} does not provide descriptors for FLANN."

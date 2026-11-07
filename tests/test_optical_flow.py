@@ -15,7 +15,6 @@ from optical_flow import (
     FarnebackResult,
     LucasKanadeResult,
     OpticalFlowPreprocessor,
-    OpticalFlowValidator,
     PyrLKFlow,
     PyrLKParameters,
     SparseRLOFFlow,
@@ -24,22 +23,21 @@ from optical_flow import (
 
 
 class TestOpticalFlowValidation(unittest.TestCase):
-    def setUp(self) -> None:
-        self.farneback = FarnebackFlow(params=FarnebackParameters())
-        self.lucas_kanade = PyrLKFlow(
-            params=PyrLKParameters(),
-            keypoint_params=ShiTomashiParameters(max_corners=20),
-        )
+    farneback: FarnebackFlow = FarnebackFlow(params=FarnebackParameters())
+    lucas_kanade: PyrLKFlow = PyrLKFlow(
+        params=PyrLKParameters(),
+        keypoint_params=ShiTomashiParameters(max_corners=20),
+    )
 
     def test_raises_on_shape_mismatch(self) -> None:
         source_image = np.zeros((40, 40), dtype=np.uint8)
         target_image = np.zeros((40, 50), dtype=np.uint8)
 
         with self.assertRaises(ValueError):
-            self.farneback.run(source_image, target_image)
+            _ = self.farneback.run(source_image, target_image)
 
         with self.assertRaises(ValueError):
-            self.lucas_kanade.run(source_image, target_image)
+            _ = self.lucas_kanade.run(source_image, target_image)
 
     def test_raises_on_invalid_mask_shape(self) -> None:
         source_image = np.zeros((40, 40), dtype=np.uint8)
@@ -47,16 +45,16 @@ class TestOpticalFlowValidation(unittest.TestCase):
         mask = np.ones((30, 40), dtype=np.uint8)
 
         with self.assertRaises(ValueError):
-            self.farneback.run(source_image, target_image, mask=mask)
+            _ = self.farneback.run(source_image, target_image, mask=mask)
 
         with self.assertRaises(ValueError):
-            self.lucas_kanade.run(source_image, target_image, mask=mask)
+            _ = self.lucas_kanade.run(source_image, target_image, mask=mask)
 
     def test_accepts_color_images(self) -> None:
         source_image = np.zeros((64, 64, 3), dtype=np.uint8)
         target_image = source_image.copy()
-        cv2.rectangle(source_image, (10, 10), (50, 50), (255, 255, 255), -1)
-        cv2.rectangle(target_image, (12, 10), (52, 50), (255, 255, 255), -1)
+        _ = cv2.rectangle(source_image, (10, 10), (50, 50), (255, 255, 255), -1)
+        _ = cv2.rectangle(target_image, (12, 10), (52, 50), (255, 255, 255), -1)
 
         result = self.farneback.run(source_image, target_image)
         self.assertEqual(result.flow.shape, (64, 64, 2))
@@ -72,6 +70,7 @@ class TestOpticalFlowMaskHandling(unittest.TestCase):
 
         np.testing.assert_array_equal(mask, original_mask)
         self.assertIsNot(prepared_mask, mask)
+        assert prepared_mask is not None
         self.assertEqual(prepared_mask.dtype, np.uint8)
         self.assertEqual(int(prepared_mask.max()), 255)
 
@@ -178,18 +177,28 @@ class TestLucasKanadeResultStatistics(unittest.TestCase):
             error=error,
         )
 
-        np.testing.assert_allclose(result.mean_flow, np.array([2.0, 0.0], dtype=np.float32))
+        np.testing.assert_allclose(
+            result.mean_flow, np.array([2.0, 0.0], dtype=np.float32)
+        )
         self.assertEqual(result.mean_l2_norm, 2.0)
         np.testing.assert_allclose(result.flow_std, np.zeros(2, dtype=np.float32))
         self.assertEqual(len(result), 1)
 
 
+def _shifted_rectangle_pair() -> tuple[np.ndarray, np.ndarray]:
+    source_image = np.zeros((120, 160, 3), dtype=np.uint8)
+    _ = cv2.rectangle(source_image, (20, 20), (100, 80), (255, 255, 255), -1)
+    target_image = np.roll(np.roll(source_image, 4, axis=1), 2, axis=0)
+    return source_image, target_image
+
+
+_SHIFTED_RECTANGLES = _shifted_rectangle_pair()
+
+
 class TestLucasKanadeSparseRLOF(unittest.TestCase):
-    def setUp(self) -> None:
-        self.source_image = np.zeros((120, 160, 3), dtype=np.uint8)
-        cv2.rectangle(self.source_image, (20, 20), (100, 80), (255, 255, 255), -1)
-        self.target_image = np.roll(np.roll(self.source_image, 4, axis=1), 2, axis=0)
-        self.keypoint_params = ShiTomashiParameters(max_corners=30)
+    source_image: np.ndarray = _SHIFTED_RECTANGLES[0]
+    target_image: np.ndarray = _SHIFTED_RECTANGLES[1]
+    keypoint_params: ShiTomashiParameters = ShiTomashiParameters(max_corners=30)
 
     def test_sparse_rlof_tracks_synthetic_shift(self) -> None:
         flow = SparseRLOFFlow(
@@ -228,4 +237,4 @@ class TestLucasKanadeSparseRLOF(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    _ = unittest.main()

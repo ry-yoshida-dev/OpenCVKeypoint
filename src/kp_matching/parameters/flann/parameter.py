@@ -1,15 +1,18 @@
+from dataclasses import dataclass, field
+
 import cv2
-from dataclasses import dataclass
-from typing import Any
+from cv2.typing import IndexParams, SearchParams
 
 from .index_type import FLANNIndexType
+
 
 @dataclass
 class FLANNParameters:
     """
     FLANN parameters.
+
     FLANN is a library for performing fast approximate nearest neighbor searches in high dimensional spaces.
-    
+
     Attributes
     ----------
     algorithm: FLANNIndexType
@@ -27,6 +30,7 @@ class FLANNParameters:
     trees: int
         The number of trees to use for the FLANN matcher.
     """
+
     algorithm: FLANNIndexType = FLANNIndexType.KDTREE
     table_number: int = 6
     key_size: int = 12
@@ -34,8 +38,9 @@ class FLANNParameters:
     checks: int = 50
     is_binary: bool = False
     trees: int = 5
+    metric: int = field(init=False, repr=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """
         Post-initialization validation.
         """
@@ -46,8 +51,8 @@ class FLANNParameters:
         """
         Validate the parameters.
 
-        Raises:
-        ----------
+        Raises
+        ------
         ValueError:
             If the parameters are not valid.
         """
@@ -66,28 +71,25 @@ class FLANNParameters:
         """
         Define the FLANN matcher.
 
-        Returns:
-        ----------
+        Returns
+        -------
         cv2.FlannBasedMatcher
             The FLANN matcher.
         """
         flann_index_params = self._define_flann_index_params()
         flann_search_params = self._define_flann_search_params()
-        return cv2.FlannBasedMatcher(
-            flann_index_params, 
-            flann_search_params # type: ignore
-            )
+        return cv2.FlannBasedMatcher(flann_index_params, flann_search_params)
 
-    def _define_flann_index_params(self) -> dict[str, Any]:
+    def _define_flann_index_params(self) -> IndexParams:
         """
         Define the FLANN index parameters.
 
-        Returns:
-        ----------
-        dict[str, int]
+        Returns
+        -------
+        IndexParams
             The FLANN index parameters.
         """
-        flann_index_params: dict[str, int] = {}
+        flann_index_params: IndexParams = {}
         flann_index_params["algorithm"] = self.algorithm.value
         if self.is_binary:
             flann_index_params["table_number"] = self.table_number
@@ -97,15 +99,15 @@ class FLANNParameters:
             flann_index_params["trees"] = self.trees
         return flann_index_params
 
-    def _define_flann_search_params(self) -> dict[str, int]:
+    def _define_flann_search_params(self) -> SearchParams:
         """
         Define the FLANN search parameters.
 
-        Returns:
-        ----------
-        dict[str, int]
+        Returns
+        -------
+        SearchParams
             The FLANN search parameters.
         """
-        flann_search_params: dict[str, int] = {}
+        flann_search_params: SearchParams = {}
         flann_search_params["checks"] = self.checks
         return flann_search_params

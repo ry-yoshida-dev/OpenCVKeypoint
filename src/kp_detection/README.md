@@ -34,6 +34,8 @@ from kp_detection.detectors import StandardKPDetector
 params = KPDetectionParameters(method=KPDetectionMethod.SIFT, scale_factor=0.5)
 result: KPDetectionResult = StandardKPDetector(params=params).detect(image)
 
-corners = ShiTomashiParameters(max_corners=200, min_distance=5).build_detector().detect(image)
+corners = (
+    ShiTomashiParameters(max_corners=200, min_distance=5).build_detector().detect(image)
+)
 harris = HarrisParameters(corner_th=0.02).build_detector().detect(image)
 ```

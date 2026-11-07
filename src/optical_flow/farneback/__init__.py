@@ -1,5 +1,5 @@
-from .processor import FarnebackFlow
 from .parameter import FarnebackParameters
+from .processor import FarnebackFlow
 from .result import FarnebackResult
 
 __all__ = [

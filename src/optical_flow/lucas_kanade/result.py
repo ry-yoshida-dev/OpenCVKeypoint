@@ -17,7 +17,7 @@ class LucasKanadeResult:
     ``source_keypoints[i]`` was tracked to ``target_keypoints[i]`` with
     ``status[i]`` and ``error[i]``.
 
-    Attributes:
+    Attributes
     ----------
     source_keypoints: np.ndarray
         Feature locations in the source (previous) image, shape ``(N, 1, 2)`` or ``(N, 2)``,
@@ -35,6 +35,7 @@ class LucasKanadeResult:
         Lower values indicate a more reliable match. Useful for ranking or filtering
         tracks in addition to ``status``.
     """
+
     source_keypoints: np.ndarray
     target_keypoints: np.ndarray
     status: np.ndarray
@@ -49,7 +50,7 @@ class LucasKanadeResult:
         if len(self.filtered_source_keypoints) == 0:
             warnings.warn(
                 "No keypoints were successfully tracked (all status values are 0). "
-                "Returning zero-valued flow statistics.",
+                + "Returning zero-valued flow statistics.",
                 stacklevel=2,
             )
             zero_keypoints = np.array([[0.0, 0.0]], dtype=np.float32)
@@ -89,7 +90,9 @@ class LucasKanadeResult:
         np.ndarray
             Flow field with shape (N, 2) between filtered source and target keypoints.
         """
-        return self.filtered_target_keypoints - self.filtered_source_keypoints
+        return np.asarray(
+            np.subtract(self.filtered_target_keypoints, self.filtered_source_keypoints)
+        )
 
     @property
     def mean_flow(self) -> np.ndarray:
@@ -101,7 +104,7 @@ class LucasKanadeResult:
         np.ndarray
             Mean flow field with shape (2,) between filtered source and target keypoints.
         """
-        return np.mean(self.flow, axis=0)
+        return np.asarray(np.mean(self.flow, axis=0))
 
     @property
     def l2_norm(self) -> np.ndarray:
@@ -113,7 +116,7 @@ class LucasKanadeResult:
         np.ndarray
             L2 norm of flow field with shape (N,) between filtered source and target keypoints.
         """
-        return np.linalg.norm(self.flow, axis=1)
+        return np.asarray(np.linalg.norm(self.flow, axis=1))
 
     @property
     def mean_l2_norm(self) -> float:
@@ -137,11 +140,11 @@ class LucasKanadeResult:
         np.ndarray
             Standard deviation of flow field with shape (2,) between filtered source and target keypoints.
         """
-        return np.std(self.flow, axis=0)
+        return np.asarray(np.std(self.flow, axis=0))
 
     def __len__(self) -> int:
         """
-        Number of successfully tracked keypoints.
+        Return the number of successfully tracked keypoints.
 
         Returns
         -------

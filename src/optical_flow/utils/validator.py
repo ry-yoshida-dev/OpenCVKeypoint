@@ -37,7 +37,7 @@ class OpticalFlowValidator:
         if source_image.shape[:2] != target_image.shape[:2]:
             raise ValueError(
                 "source_image and target_image must share the same spatial shape: "
-                f"{source_image.shape[:2]} != {target_image.shape[:2]}"
+                + f"{source_image.shape[:2]} != {target_image.shape[:2]}"
             )
 
     @staticmethod
@@ -65,7 +65,7 @@ class OpticalFlowValidator:
         if mask.shape[:2] != image_shape:
             raise ValueError(
                 "mask spatial shape must match the input images: "
-                f"{mask.shape[:2]} != {image_shape}"
+                + f"{mask.shape[:2]} != {image_shape}"
             )
 
     @staticmethod

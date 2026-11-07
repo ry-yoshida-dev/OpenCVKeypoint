@@ -29,7 +29,7 @@ Supported detectors (`KPDetectionMethod`):
 
 ## Installation
 
-Python 3.10 or newer.
+Python 3.11 or newer and opencv-contrib-python 5.0 or newer.
 
 ```bash
 pip install .
@@ -59,7 +59,9 @@ query = detector.detect(query_image)
 gallery = detector.detect(gallery_image)
 
 processor = KPMatchingProcessor(
-    params=KPMatchingParameters(common_params=KPMatchCommonParameters(detection_method=method))
+    params=KPMatchingParameters(
+        common_params=KPMatchCommonParameters(detection_method=method)
+    )
 )
 paired = processor.run_pipeline(query, gallery)  # kNN with ratio test by default
 
@@ -79,7 +81,11 @@ cv2.imwrite("matches.jpg", matched_image)
 from kp_detection.detectors import ShiTomashiParameters
 from optical_flow import FarnebackFlow, FarnebackParameters, PyrLKFlow, PyrLKParameters
 
-flow = FarnebackFlow(params=FarnebackParameters(scale_factor=0.5)).run(source_image, target_image).flow
+flow = (
+    FarnebackFlow(params=FarnebackParameters(scale_factor=0.5))
+    .run(source_image, target_image)
+    .flow
+)
 
 sparse = PyrLKFlow(
     params=PyrLKParameters(scale_factor=0.5),

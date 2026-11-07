@@ -1,23 +1,26 @@
 import warnings
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Generic, TypeVar
 
 import cv2
 import numpy as np
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import Any, Callable, Generic, TypeVar
+from typing_extensions import override
 
-from .parameter import KPDetectionParameters
 from .method import KPDetectionMethod
+from .parameter import KPDetectionParameters
 from .result import KeyPointDetectionResult as DetectionResultBase
 
 DetectorT = TypeVar("DetectorT", bound=cv2.Feature2D | None)
 ExtractorT = TypeVar("ExtractorT", bound=cv2.Feature2D | None)
 ResultT = TypeVar(
     "ResultT",
-    bound=DetectionResultBase[Any, Any],
+    bound=DetectionResultBase[object, object],
     covariant=True,
 )
 ParamsT = TypeVar("ParamsT", bound=KPDetectionParameters, covariant=True)
+
 
 @dataclass(repr=False, eq=False)
 class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
@@ -28,7 +31,7 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
     kp_detection.result) returned by detect().
     Type parameter ParamsT is the concrete KPDetectionParameters subclass for this detector.
 
-    Attributes:
+    Attributes
     ----------
     detector: DetectorT
         The detector.
@@ -37,10 +40,11 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
     params: ParamsT
         Keypoint detection parameters for this detector.
     """
+
     params: ParamsT
     detector: DetectorT = field(init=False)
     extractor: ExtractorT = field(init=False)
-    brief: Any = field(init=False, default=None)
+    brief: cv2.Feature2D | None = field(init=False, default=None)
 
     def __post_init__(self) -> None:
         self.detector, self.extractor = self._define_detector()
@@ -48,23 +52,19 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
             self.brief = self.params.brief
 
     @abstractmethod
-    def detect(
-        self,
-        img: np.ndarray,
-        mask: np.ndarray | None = None
-        ) -> ResultT:
+    def detect(self, img: np.ndarray, mask: np.ndarray | None = None) -> ResultT:
         """
         Detect keypoints in an image.
 
-        Parameters:
+        Parameters
         ----------
         img: np.ndarray
             Input image, typically ``(H, W)`` or ``(H, W, C)`` as required by the detector.
         mask: np.ndarray | None
             Boolean mask (0 = ignore, 1 = include).
-            
+
         Returns
-        ----------
+        -------
         ResultT
             The result of keypoint detection (subclass-specific).
         """
@@ -81,12 +81,13 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         """
 
     @abstractmethod
+    @override
     def __str__(self) -> str:
         """
         Return a string representation of the detector.
 
-        Returns:
-        ----------
+        Returns
+        -------
         str: The string representation of the detector.
         """
 
@@ -95,8 +96,8 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         """
         Get the method of the detector.
 
-        Returns:
-        ----------
+        Returns
+        -------
         KPDetectionMethod: The method of the detector.
         """
         return self.params.method
@@ -106,8 +107,8 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         """
         Get whether the detector uses brief descriptor extractor.
 
-        Returns:
-        ----------
+        Returns
+        -------
         bool: The whether the detector uses brief descriptor extractor.
         """
         return self.params.is_brief_applied
@@ -117,8 +118,8 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         """
         Get the image scaler function.
 
-        Returns:
-        ----------
+        Returns
+        -------
         Callable[[np.ndarray], np.ndarray]: The image scaler function.
         """
         return self.params.image_scaler
@@ -140,8 +141,8 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
         """
         Get the scale factor.
 
-        Returns:
-        ----------
+        Returns
+        -------
         float: The scale factor.
         """
         return self.params.scale_factor
@@ -184,14 +185,14 @@ class KeyPointDetector(ABC, Generic[DetectorT, ExtractorT, ResultT, ParamsT]):
 
     def _remap_result_to_original_coordinates(
         self,
-        result: DetectionResultBase[Any, Any],
+        result: DetectionResultBase[object, object],
     ) -> None:
         """
         Map detection coordinates from the working (scaled) image to the input image.
 
         Parameters
         ----------
-        result : DetectionResultBase[Any, Any]
+        result : DetectionResultBase[object, object]
             Detection result produced on ``image_scaler(img)``; updated in place.
         """
         scale_factor = self.scale_factor
