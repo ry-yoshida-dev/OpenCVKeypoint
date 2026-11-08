@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
 import cv2
 import numpy as np
@@ -11,8 +11,8 @@ from typing_extensions import override
 from .method import OpticalFlowMethod
 from .parameter import OpticalFlowParameters
 
-ParamsT = TypeVar("ParamsT", bound=OpticalFlowParameters)
-ResultT = TypeVar("ResultT")
+ParamsT = TypeVar("ParamsT", bound=OpticalFlowParameters, covariant=True)
+ResultT = TypeVar("ResultT", covariant=True)
 
 
 @dataclass(repr=False, eq=False)
@@ -60,7 +60,7 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
         if self.params.scale_factor == 1.0:
             return image
 
-        height, width = image.shape[:2]
+        height, width = cast(tuple[int, int], image.shape[:2])
         new_width = int(width * self.params.scale_factor)
         new_height = int(height * self.params.scale_factor)
         if new_width <= 0 or new_height <= 0:
@@ -95,7 +95,7 @@ class OpticalFlowProcessor(ABC, Generic[ParamsT, ResultT]):
         if mask.ndim != 2:
             raise ValueError(f"mask must be a 2D array, got shape {mask.shape}")
 
-        height, width = mask.shape[:2]
+        height, width = cast(tuple[int, int], mask.shape[:2])
         new_width = int(width * self.params.scale_factor)
         new_height = int(height * self.params.scale_factor)
         if new_width <= 0 or new_height <= 0:

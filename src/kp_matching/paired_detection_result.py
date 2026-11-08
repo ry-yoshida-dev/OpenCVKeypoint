@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass
+from typing import cast
 
 import numpy as np
+from numpy.typing import NDArray
 from opencv_utility import OpenCVOutlierFilteringFlag
 from typing_extensions import override
 
@@ -134,7 +136,9 @@ class PairedDetectionResult:
                 stacklevel=2,
             )
             return self
-        inlier_indices: list[int] = [int(i) for i in np.flatnonzero(mask.ravel() == 1)]
+        # ndarray.__eq__ is typed as returning Any in the NumPy stubs.
+        is_inlier = cast(NDArray[np.bool_], mask.ravel() == 1)
+        inlier_indices: list[int] = [int(i) for i in np.flatnonzero(is_inlier)]
         raw_matches = self.match_result.matches
         filtered = [raw_matches[i] for i in inlier_indices]
         return self.__class__(

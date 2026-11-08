@@ -12,8 +12,8 @@ from .method import KPDetectionMethod
 from .parameter import KPDetectionParameters
 from .result import KeyPointDetectionResult as DetectionResultBase
 
-DetectorT = TypeVar("DetectorT", bound=cv2.Feature2D | None)
-ExtractorT = TypeVar("ExtractorT", bound=cv2.Feature2D | None)
+DetectorT = TypeVar("DetectorT", bound=cv2.Feature2D | None, covariant=True)
+ExtractorT = TypeVar("ExtractorT", bound=cv2.Feature2D | None, covariant=True)
 ResultT = TypeVar(
     "ResultT",
     bound=DetectionResultBase[object, object],

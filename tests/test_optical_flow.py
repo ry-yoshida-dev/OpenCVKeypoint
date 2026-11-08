@@ -7,6 +7,7 @@ import warnings
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 from kp_detection.detectors.shi_tomashi.parameter import ShiTomashiParameters
 from optical_flow import (
@@ -66,13 +67,15 @@ class TestOpticalFlowMaskHandling(unittest.TestCase):
         mask[20:60, 20:60] = 1
         original_mask = mask.copy()
 
-        prepared_mask = OpticalFlowPreprocessor.prepare_detection_mask(mask)
+        prepared_mask: NDArray[np.uint8] | None = (
+            OpticalFlowPreprocessor.prepare_detection_mask(mask)
+        )
 
         np.testing.assert_array_equal(mask, original_mask)
         self.assertIsNot(prepared_mask, mask)
         assert prepared_mask is not None
         self.assertEqual(prepared_mask.dtype, np.uint8)
-        self.assertEqual(int(prepared_mask.max()), 255)
+        self.assertEqual(int(np.max(prepared_mask)), 255)
 
 
 class TestFarnebackResultScale(unittest.TestCase):
@@ -209,8 +212,7 @@ class TestLucasKanadeSparseRLOF(unittest.TestCase):
         result = flow.run(self.source_image, self.target_image)
 
         self.assertGreater(len(result), 0)
-        np.testing.assert_allclose(result.mean_flow[0], 4.0, atol=1.0)
-        np.testing.assert_allclose(result.mean_flow[1], 2.0, atol=1.0)
+        np.testing.assert_allclose(result.mean_flow, [4.0, 2.0], atol=1.0)
 
     def test_sparse_rlof_matches_pyr_lk_on_same_input(self) -> None:
         pyr_lk = PyrLKFlow(

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from .parameter import OpticalFlowParameters
     from .processor import OpticalFlowProcessor
 
 
@@ -23,13 +24,15 @@ class OpticalFlowMethod(Enum):
     SPARSE_LUCAS_KANADE = "SparseLucas-Kanade"
 
     @property
-    def processor_class(self) -> type[OpticalFlowProcessor[Any, Any]]:
+    def processor_class(
+        self,
+    ) -> type[OpticalFlowProcessor[OpticalFlowParameters, object]]:
         """
         Get the processor class for the method.
 
         Returns
         -------
-        Type[OpticalFlowProcessor[Any, Any]]
+        type[OpticalFlowProcessor[OpticalFlowParameters, object]]
             The processor class for the method.
         """
         match self:

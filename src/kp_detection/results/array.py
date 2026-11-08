@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import cast
 
 import numpy as np
 from typing_extensions import override
@@ -42,7 +43,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         """
         if self.keypoints.size == 0:
             return 0
-        return int(self.keypoints.shape[0])
+        return cast(int, self.keypoints.shape[0])
 
     @override
     def __getitem__(self, index: int) -> KPDetectionStep[np.ndarray]:
@@ -59,7 +60,7 @@ class ArrayKPDetectionResult(KeyPointDetectionResult[np.ndarray, np.ndarray]):
         KPDetectionStep[np.ndarray]:
             (xy_row, descriptor_row_or_none); xy row has shape ``(2,)``.
         """
-        row = self._as_xy_pairs()[index]
+        row = cast(np.ndarray, self._as_xy_pairs()[index])
         if self.descriptors is None:
             return (row, None)
         return (row, self.descriptors[index])

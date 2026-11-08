@@ -5,6 +5,7 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
+from numpy.typing import NDArray
 
 from kp_detection import KPDetectionMethod
 from kp_detection.detectors.agast import AGASTDetector
@@ -31,9 +32,9 @@ class TestMaskRescaler(unittest.TestCase):
         )
         mask = np.zeros((100, 200), dtype=np.uint8)
         mask[10:90, 30:170] = 255
-        scaled = params.mask_rescaler(mask)
+        scaled: NDArray[np.uint8] = params.mask_rescaler(mask)
         self.assertEqual(scaled.shape, (50, 100))
-        self.assertGreater(scaled.max(), 0)
+        self.assertGreater(np.max(scaled), 0)
         self.assertEqual(scaled.min(), 0)
 
     def test_subclass_inherits_mask_rescaler(self) -> None:

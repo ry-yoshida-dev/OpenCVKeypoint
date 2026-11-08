@@ -91,7 +91,7 @@ class MatchResult:
 
         distances = np.array([(m[0].distance, m[1].distance) for m in knn_matches])
         ratios = distances[:, 0] / (distances[:, 1] + np.finfo(float).eps)
-        indices = np.where(ratios < threshold)[0]
+        indices = np.flatnonzero(ratios < threshold)
         good_matches: list[KNNMatchGroup] = [knn_matches[i] for i in indices]
         return MatchResult(matches=good_matches)
 

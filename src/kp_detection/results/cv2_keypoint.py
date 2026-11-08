@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import cast
 
 import cv2
 import numpy as np
@@ -33,6 +34,7 @@ class KPDetectionResult(
     """
 
     keypoints: Sequence[cv2.KeyPoint]
+    descriptors: np.ndarray | None
 
     @override
     def __len__(self) -> int:
@@ -193,8 +195,8 @@ class KPDetectionResult(
 
         ix = np.round(kp_array[:, 0]).astype(int)
         iy = np.round(kp_array[:, 1]).astype(int)
-        h, w = mask.shape[:2]
-        valid = (ix >= 0) & (ix < w) & (iy >= 0) & (iy < h)
+        height, width = cast(tuple[int, int], mask.shape[:2])
+        valid = (ix >= 0) & (ix < width) & (iy >= 0) & (iy < height)
 
         keep = np.zeros(len(self.keypoints), dtype=bool)
         keep[valid] = mask[iy[valid], ix[valid]] > 0

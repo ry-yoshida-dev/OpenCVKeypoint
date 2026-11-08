@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 from typing_extensions import override
 
 from ...detector import KeyPointDetector
@@ -76,13 +77,13 @@ class HarrisDetector(KeyPointDetector[None, None, KPDetectionResult, HarrisParam
         else:
             raise ValueError(f"img must be a 2D or 3D array, got shape {img.shape}")
 
-        corner_response = self.harris_function(working)
+        corner_response: NDArray[np.float32] = self.harris_function(working)
 
         if detection_mask is not None:
             corner_response *= detection_mask
 
         corner_positions = np.argwhere(
-            corner_response > self.params.corner_th * corner_response.max()
+            corner_response > self.params.corner_th * np.max(corner_response)
         )
         keypoints = [
             cv2.KeyPoint(x=float(column), y=float(row), size=3.0)

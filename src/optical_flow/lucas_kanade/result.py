@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass, field
+from typing import cast
 
 import numpy as np
+from numpy.typing import NDArray
 
 from ..parameter import OpticalFlowParameters
 
@@ -44,7 +46,7 @@ class LucasKanadeResult:
     filtered_target_keypoints: np.ndarray = field(init=False)
 
     def __post_init__(self) -> None:
-        is_tracked = self.status.ravel() == 1
+        is_tracked = self._is_tracked
         self.filtered_source_keypoints = self.source_keypoints[is_tracked]
         self.filtered_target_keypoints = self.target_keypoints[is_tracked]
         if len(self.filtered_source_keypoints) == 0:
@@ -56,6 +58,11 @@ class LucasKanadeResult:
             zero_keypoints = np.array([[0.0, 0.0]], dtype=np.float32)
             self.filtered_source_keypoints = zero_keypoints
             self.filtered_target_keypoints = zero_keypoints.copy()
+
+    @property
+    def _is_tracked(self) -> NDArray[np.bool_]:
+        # ndarray.__eq__ is typed as returning Any in the NumPy stubs.
+        return cast(NDArray[np.bool_], self.status.ravel() == 1)
 
     def scale(self, params: OpticalFlowParameters) -> None:
         """
@@ -72,7 +79,7 @@ class LucasKanadeResult:
         inverse_scale_factor = params.inverse_scale_factor
         self.source_keypoints *= inverse_scale_factor
         self.target_keypoints *= inverse_scale_factor
-        is_tracked = self.status.ravel() == 1
+        is_tracked = self._is_tracked
         self.filtered_source_keypoints = self.source_keypoints[is_tracked]
         self.filtered_target_keypoints = self.target_keypoints[is_tracked]
         if len(self.filtered_source_keypoints) == 0:
@@ -104,7 +111,8 @@ class LucasKanadeResult:
         np.ndarray
             Mean flow field with shape (2,) between filtered source and target keypoints.
         """
-        return np.asarray(np.mean(self.flow, axis=0))
+        # NumPy 2.4 stubs type reductions along an axis as Any.
+        return np.asarray(cast(np.ndarray, np.mean(self.flow, axis=0)))
 
     @property
     def l2_norm(self) -> np.ndarray:
@@ -116,7 +124,7 @@ class LucasKanadeResult:
         np.ndarray
             L2 norm of flow field with shape (N,) between filtered source and target keypoints.
         """
-        return np.asarray(np.linalg.norm(self.flow, axis=1))
+        return np.asarray(cast(np.ndarray, np.linalg.norm(self.flow, axis=1)))
 
     @property
     def mean_l2_norm(self) -> float:
@@ -140,7 +148,7 @@ class LucasKanadeResult:
         np.ndarray
             Standard deviation of flow field with shape (2,) between filtered source and target keypoints.
         """
-        return np.asarray(np.std(self.flow, axis=0))
+        return np.asarray(cast(np.ndarray, np.std(self.flow, axis=0)))
 
     def __len__(self) -> int:
         """
@@ -151,4 +159,4 @@ class LucasKanadeResult:
         int
             Number of keypoints with ``status == 1``.
         """
-        return int(np.count_nonzero(self.status.ravel() == 1))
+        return int(np.count_nonzero(self._is_tracked))

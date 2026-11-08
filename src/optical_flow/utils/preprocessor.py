@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 import cv2
 import numpy as np
 
@@ -30,7 +32,7 @@ class OpticalFlowPreprocessor:
         if image.ndim == 2:
             return image
         if image.ndim == 3:
-            channel_count = image.shape[2]
+            channel_count = cast(int, image.shape[2])
             if channel_count == 1:
                 return image[:, :, 0]
             if channel_count == 3:
